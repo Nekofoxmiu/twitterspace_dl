@@ -29,10 +29,24 @@
   </PropertyGroup>
   <ItemGroup>
     <Content Include="app.js" />
-    <Content Include="ffmpeg.exe" />
+    <Content Include="ffmpeg\bin\avcodec-58.dll" />
+    <Content Include="ffmpeg\bin\avdevice-58.dll" />
+    <Content Include="ffmpeg\bin\avfilter-7.dll" />
+    <Content Include="ffmpeg\bin\avformat-58.dll" />
+    <Content Include="ffmpeg\bin\avutil-56.dll" />
+    <Content Include="ffmpeg\bin\ffmpeg.exe" />
+    <Content Include="ffmpeg\bin\ffplay.exe" />
+    <Content Include="ffmpeg\bin\ffprobe.exe" />
+    <Content Include="ffmpeg\bin\postproc-55.dll" />
+    <Content Include="ffmpeg\bin\swresample-3.dll" />
+    <Content Include="ffmpeg\bin\swscale-5.dll" />
     <Content Include="package.json" />
     <Content Include="README.md" />
     <Content Include="setting.json" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="ffmpeg\" />
+    <Folder Include="ffmpeg\bin\" />
   </ItemGroup>
   <Import Project="$(VSToolsPath)\Node.js Tools\Microsoft.NodejsToolsV2.targets" />
 </Project>
