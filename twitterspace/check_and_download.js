@@ -110,7 +110,7 @@ const TwitterSpace = async (whoseSpace) => {
     passSpacem3u8 = ToStrKillQuote(passSpacem3u8["data"]["source"]["location"]);
 
       console.log(passSpacem3u8);
-    //  correct m3u8
+    //  m3u8 link
 
 
       console.log(jsonData['saveplace'] + `${whoseSpace}_${currentDateTime}.m4a`); 
