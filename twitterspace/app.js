@@ -54,19 +54,23 @@ const TwitterSpace = async (whoseSpace) => {
 
     const spaceID = jsonData['spaceaccount'][`${whoseSpace}`];
 
-    const today = new Date();
 
-    let currentDateTime =
 
-        today.getFullYear() + '' +
+        const today = new Date();
 
-        (today.getMonth() + 1) + '' +
+        let currentDateTime =
 
-        today.getDate() + '_' +
+            today.getFullYear() + '' +
 
-        today.getHours() + '_' +
+            (today.getMonth() + 1) + '' +
 
-        today.getMinutes();
+            today.getDate() + '_' +
+
+            today.getHours() + '_' +
+
+            today.getMinutes();
+    
+    
 
     //  console.log(currentDateTime);
 
@@ -114,19 +118,23 @@ const TwitterSpace = async (whoseSpace) => {
 
     let outPutplace = ToStrKillQuote(jsonData['saveplace']) + `${whoseSpace}_${currentDateTime}.m4a`;
 
-    ffmpeg(passSpacem3u8)
+    
 
-        .outputOptions("-c:a copy")
+        ffmpeg(passSpacem3u8)
 
-        .outputOptions("-vn")
+            .outputOptions("-c:a copy")
 
-        .output(outPutplace)
+            .outputOptions("-vn")
 
-        .on('stderr', function (stderrLine) {
-            console.log(stderrLine);
-        })
+            .output(outPutplace)
 
-        .run();
+            .on('stderr', function (stderrLine) {
+                console.log(stderrLine);
+            })
+
+            .run();
+    
+    
 
 
 }
