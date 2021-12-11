@@ -1,0 +1,14 @@
+{
+  "name": "twitterspace",
+  "version": "0.0.0",
+  "description": "twitterspace",
+  "type": "module",
+  "main": "app.js",
+  "author": {
+    "name": ""
+  },
+  "dependencies": {
+    "axios": "^0.24.0",
+    "fluent-ffmpeg": "^2.1.2"
+  }
+}
