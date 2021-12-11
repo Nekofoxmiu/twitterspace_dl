@@ -140,7 +140,7 @@ const TwitterSpace = async (whoseSpace) => {
 }
 
 
-await TwitterSpace("neko");
+await TwitterSpace("spaceId");
 
 
 
