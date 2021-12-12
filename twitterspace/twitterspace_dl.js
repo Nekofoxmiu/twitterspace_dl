@@ -55,21 +55,21 @@ const TwitterSpace = async (whoseSpace) => {
 
 
 
-        const today = new Date();
+    const today = new Date();
 
-        let currentDateTime =
+    let currentDateTime =
 
-            today.getFullYear() + '' +
+        today.getFullYear() + '' +
 
-            (today.getMonth() + 1) + '' +
+        (today.getMonth() + 1) + '' +
 
-            today.getDate() + '_' +
+        today.getDate() + '_' +
 
-            today.getHours() + '_' +
+        today.getHours() + '_' +
 
-            today.getMinutes();
-    
-    
+        today.getMinutes();
+
+
 
     //  console.log(currentDateTime);
 
@@ -108,42 +108,35 @@ const TwitterSpace = async (whoseSpace) => {
 
     passSpacem3u8 = ToStrKillQuote(passSpacem3u8["data"]["source"]["location"]);
 
-      console.log(passSpacem3u8);
+    console.log(passSpacem3u8);
     //  correct m3u8
 
 
-      console.log(`./${whoseSpace}_${currentDateTime}.m4a`); 
+    console.log(`./${whoseSpace}_${currentDateTime}.m4a`);
     //  ./neko_20211210_14_36.m4a
 
     let outPutplace = `./${whoseSpace}_${currentDateTime}.m4a`;
 
-    
 
-        ffmpeg(passSpacem3u8)
 
-            .outputOptions("-c:a copy")
+    ffmpeg(passSpacem3u8)
 
-            .outputOptions("-vn")
+        .outputOptions("-c:a copy")
 
-            .output(outPutplace)
+        .outputOptions("-vn")
 
-            .on('stderr', function (stderrLine) {
-                console.log(stderrLine);
-            })
+        .output(outPutplace)
 
-            .run();
-    
-    
+        .on('stderr', function (stderrLine) {
+            console.log(stderrLine);
+        })
+
+        .run();
+
+
 
 
 }
 
 
 await TwitterSpace("spaceId");
-
-
-
-
-
-
-
