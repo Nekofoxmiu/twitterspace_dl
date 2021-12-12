@@ -11,7 +11,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>ccd2f37c-d58a-431e-b5df-258cea97641e</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>app.js</StartupFile>
+    <StartupFile>twitterspace_dl.js</StartupFile>
     <StartWebBrowser>False</StartWebBrowser>
     <SearchPath>
     </SearchPath>
@@ -28,7 +28,7 @@
     <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
   <ItemGroup>
-    <Content Include="app.js" />
+    <Content Include="twitterspace_dl.js" />
     <Content Include="ffmpeg\bin\avcodec-58.dll" />
     <Content Include="ffmpeg\bin\avdevice-58.dll" />
     <Content Include="ffmpeg\bin\avfilter-7.dll" />

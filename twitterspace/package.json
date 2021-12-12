@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "description": "twitterspace",
   "type": "module",
-  "main": "app.js",
+  "main": "twitterspace_dl.js",
   "author": {
     "name": ""
   },
