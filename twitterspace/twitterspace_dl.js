@@ -11,6 +11,31 @@ const FFPROBE_PATH = "./ffmpeg\bin"
 
 const TwitterSpace = async (whoseSpace) => {
 
+
+    let a = decodeURIComponent("https://twitter.com/i/api/graphql/_EftdBmcVsqcEfn1Yp1A7Q/AudioSpaceById?variables=%7B%22id%22%3A%221MnxnkowjvNKO%22%2C%22isMetatagsQuery%22%3Afalse%2C%22withSuperFollowsUserFields%22%3Atrue%2C%22withUserResults%22%3Atrue%2C%22withBirdwatchPivots%22%3Afalse%2C%22withDownvotePerspective%22%3Afalse%2C%22withReactionsMetadata%22%3Afalse%2C%22withReactionsPerspective%22%3Afalse%2C%22withSuperFollowsTweetFields%22%3Atrue%2C%22withReplays%22%3Atrue%2C%22withScheduledSpaces%22%3Atrue%7D");
+
+    let b = encodeURIComponent("https://twitter.com/i/api/graphql/_EftdBmcVsqcEfn1Yp1A7Q/AudioSpaceById?variables=" + JSON.stringify({
+
+        "id": "1MnxnkowjvNKO",
+        "isMetatagsQuery": false,
+        "withSuperFollowsUserFields": true,
+        "withUserResults": true,
+        "withBirdwatchPivots": false,
+        "withDownvotePerspective": false,
+        "withReactionsMetadata": false,
+        "withReactionsPerspective": false,
+        "withSuperFollowsTweetFields": true,
+        "withReplays": true,
+        "withScheduledSpaces": true
+    }))
+
+    console.log(b);
+
+
+
+
+    
+    
     const ToStrKillQuote = (jsonData) => JSON.stringify(jsonData).replace(/\"/g, "");
 
 
@@ -93,7 +118,22 @@ const TwitterSpace = async (whoseSpace) => {
 
 
 
-    let passSpaceId = await axios("https://twitter.com/i/api/graphql/_EftdBmcVsqcEfn1Yp1A7Q/AudioSpaceById?variables=%7B%22id%22%3A%22" + passUserId + "%22%2C%22isMetatagsQuery%22%3Afalse%2C%22withSuperFollowsUserFields%22%3Atrue%2C%22withUserResults%22%3Atrue%2C%22withBirdwatchPivots%22%3Afalse%2C%22withDownvotePerspective%22%3Afalse%2C%22withReactionsMetadata%22%3Afalse%2C%22withReactionsPerspective%22%3Afalse%2C%22withSuperFollowsTweetFields%22%3Atrue%2C%22withReplays%22%3Atrue%2C%22withScheduledSpaces%22%3Atrue%7D", axiosConfig)
+    let passSpaceId = await axios(encodeURIComponent("https://twitter.com/i/api/graphql/_EftdBmcVsqcEfn1Yp1A7Q/AudioSpaceById?variables=" + JSON.stringify({
+
+        "id": passSpaceId,
+        "isMetatagsQuery": false,
+        "withSuperFollowsUserFields": true,
+        "withUserResults": true,
+        "withBirdwatchPivots": false,
+        "withDownvotePerspective": false,
+        "withReactionsMetadata": false,
+        "withReactionsPerspective": false,
+        "withSuperFollowsTweetFields": true,
+        "withReplays": true,
+        "withScheduledSpaces": true
+
+    })), axiosConfig)
+
         .then((response) => { return response; })
         .catch((err) => { console.log('error:', err); });
 
