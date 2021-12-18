@@ -1,9 +1,4 @@
 {
-  "headers": {
-    "bearer": "Bearer AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA",
-    "cookie": "kdt=p2j4wjYpHtrdzwMnmYHU1OtyDG79DTDEdX8xLkO3; guest_id_marketing=v1%3A163501509112718744; guest_id_ads=v1%3A163501509112718744; mbox=session#ac5ca3f318ae46cb9b73f65bb9235c62#1638362606|PC#ac5ca3f318ae46cb9b73f65bb9235c62.32_0#1701605633; _ga_BYKEBDM7DS=GS1.1.1638360745.1.1.1638361220.0; _ga=GA1.2.1355609387.1631987264; _gid=GA1.2.1411511783.1639046127; dnt=1; ads_prefs=\"HBERAAA=\"; auth_multi=\"1227290686602371075:4314e8c91f4f150b6c825ec9a26c9bae32bb8c56\"; auth_token=807fabaae5180e3d8ad14a6a1994309080b31cb8; personalization_id=\"v1_bN1xA9twYFlcEM7s7CQj3w==\"; guest_id=v1%3A163907979279769024; twid=u%3D1367554512144101376; ct0=f72abc1068e5ab68cf656cd24e39a0be7ffae997c400d53c416c34eebdff774275a15e04586ee63ff73db12230b389124dcb77050301c88a872c15f7e35ab73bbbecf8eab87b81e4ad8f8c47d5bb5bb0; lang=zh-tw",
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.93 Safari/537.36"
-  },
 
   "spaceaccount": {
     "ollie": "1328277233492844544",
