@@ -161,7 +161,7 @@ const TwitterSpace = async (whoseSpace) => {
         let outPutplace = `./${whoseSpace}_${currentDateTime}.m4a`;
 
 
-        child_process.exec(`start cmd.exe /K ffmpeg.exe -i ${passSpacem3u8} -vn -c:a copy ${outPutplace} `, {
+        child_process.exec(`start cmd.exe /C ffmpeg.exe -i ${passSpacem3u8} -vn -c:a copy ${outPutplace} `, {
             env: "./ffmpeg\bin"})
 
     }
