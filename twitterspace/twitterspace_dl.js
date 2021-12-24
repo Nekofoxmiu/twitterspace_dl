@@ -23,8 +23,6 @@ const TwitterSpace = async (whoseSpace) => {
             .catch((err) => { console.log('error:', err); });
 
 
-
-
         //console.log(jsonData);
 
 
@@ -37,17 +35,30 @@ const TwitterSpace = async (whoseSpace) => {
 
         //console.log(xcsrf);
 
-        let guestToken = await axios("https://twitter.com", {
+        let guestToken = "";
 
-            "headers": {
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.93 Safari/537.36"
-            },
-            "method": "GET"
-        })
-            .then((response) => { return response["data"].match(/(?<=gt=).+?(?=;)/)[0] })
-            .catch((err) => { console.log('error:', err); });
+        do {
+            guestToken = await axios("https://twitter.com", {
 
-        
+                "headers": {
+                    "upgrade-insecure-requests": "0",
+                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.93 Safari/537.36"
+                },
+                "referrerPolicy": "strict-origin-when-cross-origin",
+                "body": null,
+                "method": "GET"
+            })
+                .then((response) => { return response["data"].match(/(?<=gt=)\d{19}/) })
+                .catch((err) => { console.log('get web fail.'); return -1; });
+            if (guestToken === null) {
+                console.log("get token fail. Retry...");
+            }
+
+        } while (guestToken === null);
+
+
+        console.log(guestToken[0]);
+
         const spaceID = jsonData['spaceaccount'][`${whoseSpace}`];
 
 
@@ -75,7 +86,7 @@ const TwitterSpace = async (whoseSpace) => {
         let passUserId = await axios("https://twitter.com/i/api/fleets/v1/avatar_content?user_ids=" + spaceID + "&only_spaces=true", {
 
             "headers": {
-                "cookie": `auth_token=`,
+                "cookie": `auth_token=4314e8c91f4f150b6c825ec9a26c9bae32bb8c56`,
                 "authorization": "Bearer AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA",
                 "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.93 Safari/537.36",
             },
@@ -105,16 +116,16 @@ const TwitterSpace = async (whoseSpace) => {
 
             "https://twitter.com/i/api/graphql/Uv5R_-Chxbn1FEkyUkSW2w/AudioSpaceById?variables=" + encodeURIComponent(JSON.stringify({
 
-            "id": passUserId,
-            "isMetatagsQuery": true,
-            "withSuperFollowsUserFields": true,
-            "withBirdwatchPivots": false,
-            "withDownvotePerspective": false,
-            "withReactionsMetadata": false,
-            "withReactionsPerspective": false,
-            "withSuperFollowsTweetFields": true,
-            "withReplays": true,
-            "withScheduledSpaces": true
+                "id": passUserId,
+                "isMetatagsQuery": true,
+                "withSuperFollowsUserFields": true,
+                "withBirdwatchPivots": false,
+                "withDownvotePerspective": false,
+                "withReactionsMetadata": false,
+                "withReactionsPerspective": false,
+                "withSuperFollowsTweetFields": true,
+                "withReplays": true,
+                "withScheduledSpaces": true
 
             })), {
 
@@ -162,7 +173,8 @@ const TwitterSpace = async (whoseSpace) => {
 
 
         child_process.exec(`start cmd.exe /C ffmpeg.exe -i ${passSpacem3u8} -vn -c:a copy ${outPutplace} `, {
-            env: "./ffmpeg\bin"})
+            env: "./ffmpeg\bin"
+        })
 
     }
     catch (err) {
