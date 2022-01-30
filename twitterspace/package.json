@@ -8,6 +8,7 @@
     "name": ""
   },
   "dependencies": {
-    "axios": "^0.24.0"
+    "axios": "^0.24.0",
+    "follow-redirects": "^1.14.7"
   }
 }
