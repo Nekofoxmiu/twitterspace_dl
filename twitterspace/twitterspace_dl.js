@@ -3,6 +3,7 @@
 import axios from "axios";
 import fs from "fs";
 import child_process from "child_process";
+import readline from "readline";
 
 
 const TwitterSpace = async (whoseSpace) => {
@@ -35,13 +36,39 @@ const TwitterSpace = async (whoseSpace) => {
 
         //console.log(xcsrf);
 
+
+
         let guestToken = "";
 
+        guestToken = await axios("https://api.twitter.com/1.1/guest/activate.json", {
+            "headers": {
+                "authorization": "Bearer AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA",
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.93 Safari/537.36"
+            },
+            "method": "POST"
+        })
+            .then((response) => { return response.data.guest_token })
+            .catch(() => { console.log('get web fail.'); return -1; });
+
+
+
+
+
+
+
+        /*
+
+        //unstable way
+
+
         do {
-            guestToken = await axios("https://twitter.com", {
+            guestToken = await axios("https://twitter.com/i/flow/login", {
 
                 "headers": {
-                    "upgrade-insecure-requests": "0",
+                    "sec-ch-ua": "\" Not A;Brand\";v=\"99\", \"Chromium\";v=\"96\", \"Google Chrome\";v=\"96\"",
+                    "sec-ch-ua-mobile": "?0",
+                    "sec-ch-ua-platform": "\"Windows\"",
+                    "upgrade-insecure-requests": "1",
                     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.93 Safari/537.36"
                 },
                 "referrerPolicy": "strict-origin-when-cross-origin",
@@ -58,6 +85,13 @@ const TwitterSpace = async (whoseSpace) => {
 
 
         console.log(guestToken[0]);
+
+
+        */
+
+
+
+
 
         const spaceID = jsonData['spaceaccount'][`${whoseSpace}`];
 
@@ -114,18 +148,24 @@ const TwitterSpace = async (whoseSpace) => {
 
         let passSpaceId = await axios(
 
-            "https://twitter.com/i/api/graphql/Uv5R_-Chxbn1FEkyUkSW2w/AudioSpaceById?variables=" + encodeURIComponent(JSON.stringify({
+
+
+
+
+
+            "https://twitter.com/i/api/graphql/w9C_a4hDEIW43HgfUet9_Q/AudioSpaceById?variables=" + encodeURIComponent(JSON.stringify({
 
                 "id": passUserId,
-                "isMetatagsQuery": true,
+                "isMetatagsQuery": false,
                 "withSuperFollowsUserFields": true,
-                "withBirdwatchPivots": false,
                 "withDownvotePerspective": false,
                 "withReactionsMetadata": false,
                 "withReactionsPerspective": false,
                 "withSuperFollowsTweetFields": true,
                 "withReplays": true,
-                "withScheduledSpaces": true
+                "__fs_interactive_text": false,
+                "__fs_responsive_web_uc_gql_enabled": false,
+                "__fs_dont_mention_me_view_api_enabled": false,
 
             })), {
 
@@ -169,11 +209,11 @@ const TwitterSpace = async (whoseSpace) => {
         console.log(`./${whoseSpace}_${currentDateTime}.m4a`);
         //  ./neko_20211210_14_36.m4a
 
-        let outPutplace = `./${whoseSpace}_${currentDateTime}.m4a`;
+        let output = `./spacesave\\${whoseSpace}_${currentDateTime}.m4a`;
 
 
-        child_process.exec(`start cmd.exe /C ffmpeg.exe -i ${passSpacem3u8} -vn -c:a copy ${outPutplace} `, {
-            env: "./ffmpeg\bin"
+        child_process.exec(`start cmd.exe /C ffmpeg.exe -i ${passSpacem3u8} -vn -c:a copy ${output} `, {
+            env: "./ffmpeg\\bin"
         })
 
     }
@@ -186,3 +226,6 @@ const TwitterSpace = async (whoseSpace) => {
 
 
 await TwitterSpace("spaceId");
+
+
+console.log("end");

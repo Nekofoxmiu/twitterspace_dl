@@ -8,7 +8,6 @@
     "name": ""
   },
   "dependencies": {
-    "axios": "^0.24.0",
-    "fluent-ffmpeg": "^2.1.2"
+    "axios": "^0.24.0"
   }
 }
