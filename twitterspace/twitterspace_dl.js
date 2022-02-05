@@ -1,46 +1,43 @@
 'use strict';
 
 import axios from "axios";
-import fs from "fs";
 import child_process from "child_process";
-import readline from "readline";
 
-
+//Twitter user name.
 const TwitterSpace = async (whoseSpace) => {
     try {
 
+        const today = new Date();
+
+        let month = '';
+        if ((today.getMonth() + 1) < 10) {
+            month = '0' + (today.getMonth() + 1);
+        }
+        else {
+            month = (today.getMonth() + 1);
+        }
+
+        const AddZero = (time) => {
+            if (time < 10) {
+                time = '0' + time;
+                return time;
+            }
+            else {
+                return time;
+            }
+        }
+
+        let currentDateTime =
+            today.getFullYear() + '' +
+            month + '' +
+            AddZero(today.getDate()) + '_' +
+            AddZero(today.getHours()) + '_' +
+            AddZero(today.getMinutes());
+
         const ToStrKillQuote = (jsonData) => JSON.stringify(jsonData).replace(/\"/g, "");
 
-
-        const jsonData = await fs.promises.readFile('./setting.json')
-
-            .then((response) => {
-
-                let jsonData = JSON.parse(response);
-
-                return jsonData;
-            })
-
-            .catch((err) => { console.log('error:', err); });
-
-
-        //console.log(jsonData);
-
-
-
-
-        //const xcsrf = ToStrKillQuote(jsonData["headers"]["cookie"]).match(/(?<=ct0=).+?(?=;)/)[0];
-
-        //for headers type cookie (?<=ct0=).+?(?=;)
-        //for netscape (?<=ct0\s).+?(?=\n\.)
-
-        //console.log(xcsrf);
-
-
-
-        let guestToken = "";
-
-        guestToken = await axios("https://api.twitter.com/1.1/guest/activate.json", {
+        //Get x-guestToken for headers
+        let guestToken = await axios("https://api.twitter.com/1.1/guest/activate.json", {
             "headers": {
                 "authorization": "Bearer AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA",
                 "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.93 Safari/537.36"
@@ -48,76 +45,71 @@ const TwitterSpace = async (whoseSpace) => {
             "method": "POST"
         })
             .then((response) => { return response.data.guest_token })
-            .catch(() => { console.log('get web fail.'); return -1; });
+            .catch(() => { console.log('get x-guestToken fail.'); return -1; });
 
+        //Get mainJsId for request Url
+        let mainJsId = await axios("https://twitter.com", {
+            "headers": {
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.93 Safari/537.36"
+            },
+            "method": "GET"
+        })
+            .then((response) => { return response.data.match(/(?<=web\/main\.).*?(?=\.js)/)[0] })
+            .catch(() => { console.log('get mainJsId fail.'); return -1; });
 
+        //Prase main.xxxxxxxx.js file to get queryId 
+        let mainJsUrl = 'https://abs.twimg.com/responsive-web/client-web/main.' + mainJsId + '.js';
+        let mainJsData = await axios(mainJsUrl, {
+            "headers": {
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.93 Safari/537.36"
+            },
+            "method": "GET"
+        })
+            .then((response) => { return response.data.match(/queryId:"([^"]+)",operationName:"([^"]+)",operationType:"query"/g); })
+            .catch(() => { console.log('get mainJsData fail.'); return -1; });
 
+        //Pick needed Id from list
+        let UserByScreenNameQraphl = '';
+        let AudioSpaceById = '';
+        for (let i = 0, testA = -1, testB = -1; i < mainJsData.length; i++) {
 
-
-
-
-        /*
-
-        //unstable way
-
-
-        do {
-            guestToken = await axios("https://twitter.com/i/flow/login", {
-
-                "headers": {
-                    "sec-ch-ua": "\" Not A;Brand\";v=\"99\", \"Chromium\";v=\"96\", \"Google Chrome\";v=\"96\"",
-                    "sec-ch-ua-mobile": "?0",
-                    "sec-ch-ua-platform": "\"Windows\"",
-                    "upgrade-insecure-requests": "1",
-                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.93 Safari/537.36"
-                },
-                "referrerPolicy": "strict-origin-when-cross-origin",
-                "body": null,
-                "method": "GET"
-            })
-                .then((response) => { return response["data"].match(/(?<=gt=)\d{19}/) })
-                .catch((err) => { console.log('get web fail.'); return -1; });
-            if (guestToken === null) {
-                console.log("get token fail. Retry...");
+            if (testA === -1) {
+                testA = mainJsData[i].search(/UserByScreenName/);
+                if (testA != -1) {
+                    UserByScreenNameQraphl = mainJsData[i];
+                    UserByScreenNameQraphl = UserByScreenNameQraphl.match(/(?<=queryId:").*?(?=")/)[0];
+                }
             }
+            if (testB === -1) {
+                testB = mainJsData[i].search(/AudioSpaceById/);
+                if (testB != -1) {
+                    AudioSpaceById = mainJsData[i];
+                    AudioSpaceById = AudioSpaceById.match(/(?<=queryId:").*?(?=")/)[0];
+                }
 
-        } while (guestToken === null);
-
-
-        console.log(guestToken[0]);
-
-
-        */
-
-
-
-
-
-        const spaceID = jsonData['spaceaccount'][`${whoseSpace}`];
+            }
+        }
 
 
 
+        let userId = await axios(`https://twitter.com/i/api/graphql/${UserByScreenNameQraphl}/UserByScreenName?variables=` + encodeURIComponent(JSON.stringify({
 
-        const today = new Date();
+            "screen_name": whoseSpace,
+            "withSafetyModeUserFields": true,
+            "withSuperFollowsUserFields": true
 
-        let currentDateTime =
+        })), {
+            "headers": {
+                "x-guest-token": guestToken,
+                "authorization": "Bearer AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA",
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.93 Safari/537.36"
+            },
+            "method": "GET"
+        })
+            .then((response) => { return response.data.data.user.result.rest_id })
+            .catch(() => { console.log('get userId from screenName fail.'); return -1; });
 
-            today.getFullYear() + '' +
-
-            (today.getMonth() + 1) + '' +
-
-            today.getDate() + '_' +
-
-            today.getHours() + '_' +
-
-            today.getMinutes();
-
-
-
-        //  console.log(currentDateTime);
-
-
-        let passUserId = await axios("https://twitter.com/i/api/fleets/v1/avatar_content?user_ids=" + spaceID + "&only_spaces=true", {
+        let spaceId = await axios("https://twitter.com/i/api/fleets/v1/avatar_content?user_ids=" + userId + "&only_spaces=true", {
 
             "headers": {
                 "cookie": `auth_token=4314e8c91f4f150b6c825ec9a26c9bae32bb8c56`,
@@ -129,33 +121,22 @@ const TwitterSpace = async (whoseSpace) => {
 
         )
             .then((response) => { return response; })
-            .catch((err) => { console.log('error:', err); });
+            .catch((err) => { console.log('get spaceId fail.'); return -1; });
 
 
-        if (ToStrKillQuote(passUserId["data"]["users"]) === "{}") {
-
-            console.log("Twitter space is not open.");
-            return;
-
-        }
+        if (ToStrKillQuote(spaceId.data.users) === "{}") { console.log("Twitter space is not open."); return 2; }
         else {
-
-            passUserId = ToStrKillQuote(passUserId["data"]["users"][`${spaceID}`]["spaces"]["live_content"]["audiospace"]["broadcast_id"]);
-
+            spaceId = ToStrKillQuote(spaceId.data.users[`${userId}`].spaces.live_content.audiospace.broadcast_id);
+            console.log(spaceId);
         }
 
 
 
-        let passSpaceId = await axios(
+        let passBroadcastId = await axios(
 
+            `https://twitter.com/i/api/graphql/${AudioSpaceById}/AudioSpaceById?variables=` + encodeURIComponent(JSON.stringify({
 
-
-
-
-
-            "https://twitter.com/i/api/graphql/w9C_a4hDEIW43HgfUet9_Q/AudioSpaceById?variables=" + encodeURIComponent(JSON.stringify({
-
-                "id": passUserId,
+                "id": spaceId,
                 "isMetatagsQuery": false,
                 "withSuperFollowsUserFields": true,
                 "withDownvotePerspective": false,
@@ -180,11 +161,11 @@ const TwitterSpace = async (whoseSpace) => {
             .then((response) => { return response; })
             .catch((err) => { console.log('error:', err); });
 
-        passSpaceId = ToStrKillQuote(passSpaceId["data"]["data"]["audioSpace"]["metadata"]["media_key"]);
+        passBroadcastId = ToStrKillQuote(passBroadcastId.data.data.audioSpace.metadata.media_key);
 
 
 
-        let passSpacem3u8 = await axios("https://twitter.com/i/api/1.1/live_video_stream/status/" + passSpaceId + "?client=web&use_syndication_guest_id=false&cookie_set_host=twitter.com", {
+        let Spacem3u8 = await axios("https://twitter.com/i/api/1.1/live_video_stream/status/" + passBroadcastId + "?client=web&use_syndication_guest_id=false&cookie_set_host=twitter.com", {
 
             "headers": {
                 "x-guest-token": guestToken,
@@ -200,22 +181,15 @@ const TwitterSpace = async (whoseSpace) => {
             .catch((err) => { console.log('error:', err); });
 
 
-        passSpacem3u8 = ToStrKillQuote(passSpacem3u8["data"]["source"]["location"]);
+        Spacem3u8 = ToStrKillQuote(Spacem3u8.data.source.location);
 
-        console.log(passSpacem3u8);
-        //  correct m3u8
+        let output = `./\\${whoseSpace}_${currentDateTime}.m4a`;
 
+        console.log(`./${whoseSpace}_${currentDateTime}.m4a start recording.`);
 
-        console.log(`./${whoseSpace}_${currentDateTime}.m4a`);
-        //  ./neko_20211210_14_36.m4a
+        child_process.exec(`start cmd.exe /C ffmpeg.exe -i ${Spacem3u8} -vn -c:a copy ${output} `, { env: "./ffmpeg\\bin" }) 
 
-        let output = `./spacesave\\${whoseSpace}_${currentDateTime}.m4a`;
-
-
-        child_process.exec(`start cmd.exe /C ffmpeg.exe -i ${passSpacem3u8} -vn -c:a copy ${output} `, {
-            env: "./ffmpeg\\bin"
-        })
-
+        return 1;
     }
     catch (err) {
         console.log('error:', err);
@@ -224,8 +198,6 @@ const TwitterSpace = async (whoseSpace) => {
 
 }
 
+//export { TwitterSpace };
 
-await TwitterSpace("spaceId");
-
-
-console.log("end");
+TwitterSpace('Nekofoxball')

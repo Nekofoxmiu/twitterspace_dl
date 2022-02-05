@@ -34,7 +34,6 @@
     <Content Include="twitterspace_dl.js" />
     <Content Include="package.json" />
     <Content Include="README.md" />
-    <Content Include="setting.json" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="ffmpeg\" />
