@@ -1,12 +1,50 @@
-# twitterspace
+# twitterspace_dl.js module
 
-待辦：
+```
+This project import axios.
+And rely on ffmpeg to download space.
+Please put ffmpeg.exe and twitterspace_dl.js in the same folder.
+```
 
-1. 循環偵測
-2. 使用者輸入
-3. 帳號名稱轉ID
+> **use way**
+
+```javascript
+TwitterSpace("TwitterUserScreenName", downloadSpaceOrNot, "downloadOutputPath")
+```
+**Async function**
+
+1. TwitterUserScreenName accept string.
+2. downloadSpaceOrNot accept true/false/"true"/"false" (Can skip. Default is true.)
+3. downloadOutputPath accept string (Can skip. Default is "./")
 
 
-目前只有偵測下載功能
+> **example**
+```javascript
+TwitterSpace("omarupolka", true, "./")
+//Will start recording Polka's space and return m3u8 url.
 
-備註：目前還無使用者輸入，要修改偵測的對象請至 setting.json 修改 spaceId 欄
+TwitterSpace("omarupolka", false)
+//Will only return m3u8 url.
+```
+## Small additional module: GetQueryId.js
+```
+This module import axios too.
+Can use without twitterspace_dl.js.
+```
+> **use way**
+
+```javascript
+GetQueryId("QraphlName")
+```
+**Async function**
+QraphlName accept string and array.
+1. If input string will return string, input array will return array with same sequence.
+2. It will save all QueryId to ./QueryIdList.json.
+> **example**
+```javascript
+GetQueryId(["HomeTimeline", "BizProfileFetchUser", "CommunityModeratorsTimeline"])
+//output: ['bkgUzmWplULW-ncjplP5Tw','o3OXj0LtB6MkqfR7o3_Fig','uJC_rT_soX7ePpHF9hXnpw']
+
+GetQueryId("HomeTimeline")
+//output: bkgUzmWplULW-ncjplP5Tw
+```
