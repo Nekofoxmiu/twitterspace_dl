@@ -16,7 +16,10 @@ TwitterSpace("TwitterUserScreenName", downloadSpaceOrNot, "downloadOutputPath")
 1. TwitterUserScreenName accept string.
 2. downloadSpaceOrNot accept true/false/"true"/"false" (Can skip. Default is true.)
 3. downloadOutputPath accept string (Can skip. Default is "./")
-
+4. Return rule: 
+   - User's space open and sucess get m3u8 rreturn m3u8.
+   - User's space not open return 2
+   - Something get wrong return -1
 
 > **example**
 ```javascript
