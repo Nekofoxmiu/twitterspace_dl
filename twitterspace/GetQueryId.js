@@ -4,11 +4,6 @@ import fs from "fs";
 
 const GetQueryId = async (QraphlName) => {
 
-    let configData = "";
-
-    try { configData = JSON.parse(fs.readFileSync('./config.json')); }
-    catch (err) { console.log('error:', err); return -1; }
-
     //Get mainJsId for request Url
     let mainJsId = await axios("https://twitter.com", {
         "headers": {
