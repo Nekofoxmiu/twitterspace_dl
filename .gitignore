@@ -364,3 +364,5 @@ FodyWeavers.xsd
 /twitterspace/spacesave
 /twitterspace.sln
 /twitterspace/ffmpeg.exe
+/twitterspace/QueryIdList.json
+/twitterspace/twitterspace.njsproj
