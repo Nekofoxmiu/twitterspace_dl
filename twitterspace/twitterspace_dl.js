@@ -3,11 +3,11 @@
 import axios from "axios";
 import child_process from "child_process";
 import fs from "fs";
-import GetQueryId  from "./GetQueryId.js"
+import GetQueryId from "./GetQueryId.js"
 
 
 
-const TwitterSpace = async (whoseSpace, recordOrNot) => {
+const TwitterSpace = async (whoseSpace, recordOrNot, outputPath) => {
     try {
 
         const today = new Date();
@@ -38,10 +38,6 @@ const TwitterSpace = async (whoseSpace, recordOrNot) => {
             AddZero(today.getMinutes());
 
         const ToStrKillQuote = (jsonData) => JSON.stringify(jsonData).replace(/\"/g, "");
-
-        let configData = "";
-        try { configData = JSON.parse(fs.readFileSync('./config.json')); }
-        catch (err) { console.log('error:', err); return -1; }
 
         axios.defaults.timeout = 10000;
 
@@ -174,26 +170,29 @@ const TwitterSpace = async (whoseSpace, recordOrNot) => {
 
         Spacem3u8 = ToStrKillQuote(Spacem3u8.data.source.location);
 
-        let output = `${configData.dataPath.outputPath}\\${whoseSpace}_${currentDateTime}.m4a`;
-
-        try { fs.accessSync(`${configData.dataPath.ffmpegPath}ffmpeg.exe`, fs.constants.R_OK) }
-        catch {
-            console.log("M3u8 downloading rely on ffmpeg. Please check your path of ffmpeg.exe or download it on https://www.ffmpeg.org")
-            return -1;
-        }
-
+        let output = `${outputPath}\\${whoseSpace}_${currentDateTime}.m4a`;
 
         if (recordOrNot != undefined) {
             if (recordOrNot === true || recordOrNot === "true") {
 
-                child_process.exec(`ffmpeg.exe -i ${Spacem3u8} -vn -c:a copy ${output} `, { env: `${configData.dataPath.ffmpegPath}` })
+                try { fs.accessSync("./ffmpeg.exe", fs.constants.R_OK) }
+                catch {
+                    console.log("M3u8 downloading rely on ffmpeg. Please put ffmpeg.exe in the folder.")
+                    return -1;
+                }
+                child_process.exec(`ffmpeg.exe -i ${Spacem3u8} -vn -c:a copy ${output} `, { env: "./" })
                 console.log(`${whoseSpace}'s space start recording.`);
                 return Spacem3u8;
             }
             else if (recordOrNot === false || recordOrNot === "false") { return Spacem3u8; }
         }
         else {
-            child_process.exec(`ffmpeg.exe -i ${Spacem3u8} -vn -c:a copy ${output} `, { env: `${configData.dataPath.ffmpegPath}` })
+            try { fs.accessSync("./ffmpeg.exe", fs.constants.R_OK) }
+            catch {
+                console.log("M3u8 downloading rely on ffmpeg. Please put ffmpeg.exe in the folder.")
+                return -1;
+            }
+            child_process.exec(`ffmpeg.exe -i ${Spacem3u8} -vn -c:a copy ${output} `, { env: "./" })
             console.log(`${whoseSpace}'s space start recording.`);
             return Spacem3u8;
         }
@@ -204,6 +203,7 @@ const TwitterSpace = async (whoseSpace, recordOrNot) => {
 
 
 }
+
 
 export default TwitterSpace;
 
