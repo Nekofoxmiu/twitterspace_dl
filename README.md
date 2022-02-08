@@ -3,7 +3,7 @@
 ```
 This project import axios.
 And rely on ffmpeg to download space.
-Please put ffmpeg.exe and twitterspace_dl.js in the same folder.
+Please put ffmpeg.exe and twitterspace_dl.js in the same folder or set ffmpeg.exe in enviroment.
 ```
 
 > **use way**
