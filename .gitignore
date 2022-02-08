@@ -361,8 +361,7 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
-/twitterspace/spacesave
 /twitterspace.sln
-/twitterspace/ffmpeg.exe
-/twitterspace/QueryIdList.json
-/twitterspace/twitterspace.njsproj
+/ffmpeg.exe
+/QueryIdList.json
+/twitterspace.njsproj
