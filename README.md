@@ -17,17 +17,17 @@ TwitterSpace("TwitterUserScreenName", downloadSpaceOrNot, "downloadOutputPath")
 2. downloadSpaceOrNot accept true/false/"true"/"false" (Can skip. Default is true.)
 3. downloadOutputPath accept string (Can skip. Default is "./")
 4. Return rule: 
-   - User's space open and sucess get m3u8 return m3u8.
+   - User's space open and sucess get m3u8 return object contain title name and m3u8 url (objectName.title/objectName.m3u8).
    - User's space not open return 2
    - Something get wrong return -1
 
 > **example**
 ```javascript
 TwitterSpace("omarupolka", true, "./")
-//Will start recording Polka's space and return m3u8 url.
+//Will start recording Polka's space and return object contain title name and m3u8 url (objectName.title/objectName.m3u8).
 
 TwitterSpace("omarupolka", false)
-//Will only return m3u8 url.
+//Will only return object contain title name and m3u8 url (objectName.title/objectName.m3u8).
 ```
 ## Small additional module: GetQueryId.js
 ```
