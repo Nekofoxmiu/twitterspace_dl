@@ -172,7 +172,7 @@ const TwitterSpace = async (whoseSpace, recordOrNot, outputPath) => {
 
         Spacem3u8 = ToStrKillQuote(Spacem3u8.data.source.location);
 
-        let output = `${outputPath}\\${whoseSpace}_${broadcastTitle}_${currentDateTime}.m4a`;
+        let output = `${outputPath}\\${whoseSpace}_${currentDateTime}.m4a`;
 
         if (recordOrNot != undefined) {
             if (recordOrNot === true || recordOrNot === "true") {
