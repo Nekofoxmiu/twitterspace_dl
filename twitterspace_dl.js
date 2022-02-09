@@ -72,7 +72,7 @@ const TwitterSpace = async (whoseSpace, recordOrNot, outputPath) => {
         //Get UserId from screenname
         let userId = await axios(`https://twitter.com/i/api/graphql/${UserByScreenNameQraphl}/UserByScreenName?variables=` + encodeURIComponent(JSON.stringify({
 
-            "screen_name": whoseSpace,
+            "screen_name": `${whoseSpace}`,
             "withSafetyModeUserFields": true,
             "withSuperFollowsUserFields": true
 
@@ -208,7 +208,5 @@ const TwitterSpace = async (whoseSpace, recordOrNot, outputPath) => {
 
 
 export default TwitterSpace;
-
-
 
 
