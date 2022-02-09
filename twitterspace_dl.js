@@ -38,6 +38,8 @@ const TwitterSpace = async (whoseSpace, recordOrNot, outputPath) => {
 
         const ToStrKillQuote = (jsonData) => JSON.stringify(jsonData).replace(/\"/g, "");
 
+
+
         axios.defaults.timeout = 10000;
 
         let UserByScreenNameQraphl = await GetQueryId('UserByScreenName')
@@ -170,7 +172,7 @@ const TwitterSpace = async (whoseSpace, recordOrNot, outputPath) => {
         if (Spacem3u8 === -1) { return -1; }
 
         Spacem3u8 = ToStrKillQuote(Spacem3u8.data.source.location);
-
+        if (outputPath === null) { outputPath = "./" }
         let output = `${outputPath}\\${whoseSpace}_${currentDateTime}.m4a`;
 
         if (recordOrNot != undefined) {
