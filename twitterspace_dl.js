@@ -2,7 +2,6 @@
 
 import axios from "axios";
 import child_process from "child_process";
-import fs from "fs";
 import GetQueryId from "./GetQueryId.js"
 
 
@@ -172,14 +171,14 @@ const TwitterSpace = async (whoseSpace, recordOrNot, outputPath) => {
 
         Spacem3u8 = ToStrKillQuote(Spacem3u8.data.source.location);
 
-        let output = `${outputPath}\\${whoseSpace}_${currentDateTime}.m4a`;
+        let output = `${outputPath}\\${whoseSpace}_${broadcastTitle}_${currentDateTime}.m4a`;
 
         if (recordOrNot != undefined) {
             if (recordOrNot === true || recordOrNot === "true") {
 
-                try { fs.accessSync("./ffmpeg.exe", fs.constants.R_OK) }
+                try { child_process.exec(`ffmpeg.exe -i ${Spacem3u8} -vn -c:a copy ${output} `, { env: "./" }) }
                 catch {
-                    console.log("M3u8 downloading rely on ffmpeg. Please put ffmpeg.exe in the folder.")
+                    console.log("ffmpeg error")
                     return -1;
                 }
                 child_process.exec(`ffmpeg.exe -i ${Spacem3u8} -vn -c:a copy ${output} `, { env: "./" })
@@ -193,7 +192,7 @@ const TwitterSpace = async (whoseSpace, recordOrNot, outputPath) => {
                 child_process.exec(`ffmpeg.exe -i ${Spacem3u8} -vn -c:a copy ${output} `, { env: "./" })
  }
             catch {
-                console.log("M3u8 downloading rely on ffmpeg. Please put ffmpeg.exe in the folder.")
+                console.log("ffmpeg error")
                 return -1;
             }
             console.log(`${whoseSpace}'s space start recording.`);
