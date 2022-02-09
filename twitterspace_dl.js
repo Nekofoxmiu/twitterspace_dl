@@ -172,9 +172,9 @@ const TwitterSpace = async (whoseSpace, recordOrNot, outputPath) => {
         if (Spacem3u8 === -1) { return -1; }
 
         Spacem3u8 = ToStrKillQuote(Spacem3u8.data.source.location);
-        if (outputPath === null) { outputPath = "./" }
-        let output = `${outputPath}\\${whoseSpace}_${broadcastTitle}_${currentDateTime}.m4a`;
-
+        if (outputPath === undefined) { outputPath = "./" }
+        let output = `${outputPath}\\${whoseSpace}_${currentDateTime}.m4a`;
+        console.log(output)
         if (recordOrNot != undefined) {
             if (recordOrNot === true || recordOrNot === "true") {
 
@@ -192,7 +192,7 @@ const TwitterSpace = async (whoseSpace, recordOrNot, outputPath) => {
         else {
             try {
                 child_process.exec(`ffmpeg.exe -i ${Spacem3u8} -vn -c:a copy ${output} `, { env: "./" })
- }
+            }
             catch {
                 console.log("ffmpeg error")
                 return -1;
