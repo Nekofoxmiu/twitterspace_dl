@@ -189,12 +189,13 @@ const TwitterSpace = async (whoseSpace, recordOrNot, outputPath) => {
             else if (recordOrNot === false || recordOrNot === "false") { return { "title": broadcastTitle, "m3u8": Spacem3u8 }; }
         }
         else {
-            try { fs.accessSync("./ffmpeg.exe", fs.constants.R_OK) }
+            try {
+                child_process.exec(`ffmpeg.exe -i ${Spacem3u8} -vn -c:a copy ${output} `, { env: "./" })
+ }
             catch {
                 console.log("M3u8 downloading rely on ffmpeg. Please put ffmpeg.exe in the folder.")
                 return -1;
             }
-            child_process.exec(`ffmpeg.exe -i ${Spacem3u8} -vn -c:a copy ${output} `, { env: "./" })
             console.log(`${whoseSpace}'s space start recording.`);
             return { "title": broadcastTitle, "m3u8": Spacem3u8 };
         }
