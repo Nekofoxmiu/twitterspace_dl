@@ -115,7 +115,7 @@ const TwitterSpace = async (whoseSpace, recordOrNot, outputPath) => {
 
 
 
-        let broadcastId = await axios(
+        let broadcastIdPass = await axios(
 
             `https://twitter.com/i/api/graphql/${AudioSpaceByIdQraphl}/AudioSpaceById?variables=` + encodeURIComponent(JSON.stringify({
 
@@ -144,10 +144,10 @@ const TwitterSpace = async (whoseSpace, recordOrNot, outputPath) => {
             .then((response) => { return response; })
             .catch((err) => { console.log('error:', err); });
 
-        if (broadcastId === -1) { return -1; }
+        if (broadcastIdPass === -1) { return -1; }
 
-        broadcastId = ToStrKillQuote(broadcastId.data.data.audioSpace.metadata.media_key);
-        broadcastTitle = ToStrKillQuote(broadcastId.data.data.audioSpace.metadata.title)
+        let broadcastId = ToStrKillQuote(broadcastIdPass.data.data.audioSpace.metadata.media_key);
+        let broadcastTitle = ToStrKillQuote(broadcastIdPass.data.data.audioSpace.metadata.title)
 
         console.log(`Get broadcastId: [${broadcastId}]`);
 
@@ -184,9 +184,9 @@ const TwitterSpace = async (whoseSpace, recordOrNot, outputPath) => {
                 }
                 child_process.exec(`ffmpeg.exe -i ${Spacem3u8} -vn -c:a copy ${output} `, { env: "./" })
                 console.log(`${whoseSpace}'s space start recording.`);
-                return Spacem3u8;
+                return { "title": broadcastTitle, "m3u8": Spacem3u8 };
             }
-            else if (recordOrNot === false || recordOrNot === "false") { return Spacem3u8; }
+            else if (recordOrNot === false || recordOrNot === "false") { return { "title": broadcastTitle, "m3u8": Spacem3u8 }; }
         }
         else {
             try { fs.accessSync("./ffmpeg.exe", fs.constants.R_OK) }
@@ -196,7 +196,7 @@ const TwitterSpace = async (whoseSpace, recordOrNot, outputPath) => {
             }
             child_process.exec(`ffmpeg.exe -i ${Spacem3u8} -vn -c:a copy ${output} `, { env: "./" })
             console.log(`${whoseSpace}'s space start recording.`);
-            return Spacem3u8;
+            return { "title": broadcastTitle, "m3u8": Spacem3u8 };
         }
     }
     catch (err) {
