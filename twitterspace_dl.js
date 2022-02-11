@@ -173,17 +173,24 @@ const TwitterSpace = async (whoseSpace, recordOrNot, outputPath) => {
 
         Spacem3u8 = ToStrKillQuote(Spacem3u8.data.source.location);
         if (outputPath === undefined) { outputPath = "./" }
-        let output = `${outputPath}\\${whoseSpace}_${currentDateTime}.m4a`;
+        let outputBroadcastTitle = broadcastTitle.replace(/[<>:;,?"*|/\\]/g, "").replace(/\s/g, "_")
+        let output = `${outputPath}\\${whoseSpace}_${currentDateTime}_${outputBroadcastTitle}.m4a`;
         console.log(output)
         if (recordOrNot != undefined) {
             if (recordOrNot === true || recordOrNot === "true") {
 
-                try { child_process.exec(`ffmpeg.exe -i ${Spacem3u8} -vn -c:a copy ${output} `, { env: "./" }) }
+                try {
+                    child_process.exec(`ffmpeg.exe -i ${Spacem3u8} -vn -c:a copy ${output} `, { env: "./" }), (error, stdout, stderr) => {
+                        if (error) {
+                            console.error(`exec error: ${error}`);
+                            return;
+                        }
+                        console.log(`stdout: ${stdout}`);
+                        console.error(`stderr: ${stderr}`); }}
                 catch {
-                    console.log("ffmpeg error")
+                    console.log("create child_process error")
                     return -1;
                 }
-                child_process.exec(`ffmpeg.exe -i ${Spacem3u8} -vn -c:a copy ${output} `, { env: "./" })
                 console.log(`${whoseSpace}'s space start recording.`);
                 return { "title": broadcastTitle, "m3u8": Spacem3u8 };
             }
@@ -191,10 +198,23 @@ const TwitterSpace = async (whoseSpace, recordOrNot, outputPath) => {
         }
         else {
             try {
-                child_process.exec(`ffmpeg.exe -i ${Spacem3u8} -vn -c:a copy ${output} `, { env: "./" })
+                try {
+                    child_process.exec(`ffmpeg.exe -i ${Spacem3u8} -vn -c:a copy ${output} `, { env: "./" }), (error, stdout, stderr) => {
+                        if (error) {
+                            console.error(`exec error: ${error}`);
+                            return;
+                        }
+                        console.log(`stdout: ${stdout}`);
+                        console.error(`stderr: ${stderr}`);
+                    }
+                }
+                catch {
+                    console.log("create child_process error")
+                    return -1;
+                }
             }
             catch {
-                console.log("ffmpeg error")
+                console.log("create child_process error")
                 return -1;
             }
             console.log(`${whoseSpace}'s space start recording.`);
