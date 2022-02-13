@@ -4,7 +4,9 @@ import axios from "axios";
 import child_process from "child_process";
 import GetQueryId from "./GetQueryId.js"
 
-
+function wait(ms) {
+    return new Promise(resolve => setTimeout(() => resolve(), ms));
+};
 
 const TwitterSpace = async (whoseSpace, recordOrNot, outputPath) => {
     try {
@@ -178,47 +180,82 @@ const TwitterSpace = async (whoseSpace, recordOrNot, outputPath) => {
         console.log(output)
         if (recordOrNot != undefined) {
             if (recordOrNot === true || recordOrNot === "true") {
+                let checkStart = false;
+                try {
+                    for (let checkspawn = 0, checkclose = 0, i = 0; i < 15; i++) {
+                        const ffmpeg = child_process.exec(`ffmpeg.exe -i ${Spacem3u8} -y -vn -c:a copy ${output} `, { env: "./" }, (error) => {
+                            if (error) {
+                                console.error(`ffmpeg error`);
+                            }
+                        })
 
-                try {
-                    child_process.exec(`ffmpeg.exe -i ${Spacem3u8} -vn -c:a copy ${output} `, { env: "./" }), (error, stdout, stderr) => {
-                        if (error) {
-                            console.error(`exec error: ${error}`);
-                            return;
+                        ffmpeg.on('spawn', () => { checkspawn++ });
+                        ffmpeg.on('close', (code) => {
+                            if (code === 1 && code != 0) {
+                                console.log(`Success get m3u8 but it still empty. Retry...(${i + 1}/15)`);
+                                checkclose++
+                            }
+
+                        });
+                        await wait(1000);
+                        if (checkspawn != checkclose) {
+                            checkStart = true
+                            break;
                         }
-                        console.log(`stdout: ${stdout}`);
-                        console.error(`stderr: ${stderr}`); }}
-                catch {
-                    console.log("create child_process error")
-                    return -1;
-                }
-                console.log(`${whoseSpace}'s space start recording.`);
-                return { "title": broadcastTitle, "m3u8": Spacem3u8 };
-            }
-            else if (recordOrNot === false || recordOrNot === "false") { return { "title": broadcastTitle, "m3u8": Spacem3u8 }; }
-        }
-        else {
-            try {
-                try {
-                    child_process.exec(`ffmpeg.exe -i ${Spacem3u8} -vn -c:a copy ${output} `, { env: "./" }), (error, stdout, stderr) => {
-                        if (error) {
-                            console.error(`exec error: ${error}`);
-                            return;
-                        }
-                        console.log(`stdout: ${stdout}`);
-                        console.error(`stderr: ${stderr}`);
                     }
                 }
                 catch {
                     console.log("create child_process error")
                     return -1;
                 }
+                if (checkStart) {
+                    console.log(`${whoseSpace}'s space start recording.`);
+                    return { "title": broadcastTitle, "m3u8": Spacem3u8 };
+                }
+                else {
+                    console.log("Download fail.")
+                    return -1
+                }
+            }
+            else if (recordOrNot === false || recordOrNot === "false") { return { "title": broadcastTitle, "m3u8": Spacem3u8 }; }
+        }
+        else {
+            let checkStart = false;
+            try {
+                for (let checkspawn = 0, checkclose = 0, i = 0; i < 15; i++) {
+                    const ffmpeg = child_process.exec(`ffmpeg.exe -i ${Spacem3u8} -y -vn -c:a copy ${output} `, { env: "./" }, (error) => {
+                        if (error) {
+                            console.error(`ffmpeg error`);
+                        }
+                    })
+
+                    ffmpeg.on('spawn', () => { checkspawn++ });
+                    ffmpeg.on('close', (code) => {
+                        if (code === 1 && code != 0) {
+                            console.log(`Success get m3u8 but it still empty. Retry...(${i + 1}/15)`);
+                            checkclose++
+                        }
+
+                    });
+                    await wait(1000);
+                    if (checkspawn != checkclose) {
+                        checkStart = true
+                        break;
+                    }
+                }
             }
             catch {
                 console.log("create child_process error")
                 return -1;
             }
-            console.log(`${whoseSpace}'s space start recording.`);
-            return { "title": broadcastTitle, "m3u8": Spacem3u8 };
+            if (checkStart) {
+                console.log(`${whoseSpace}'s space start recording.`);
+                return { "title": broadcastTitle, "m3u8": Spacem3u8 };
+            }
+            else {
+                console.log("Download fail.")
+                return -1
+            }
         }
     }
     catch (err) {
