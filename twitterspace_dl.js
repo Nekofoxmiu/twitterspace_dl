@@ -177,11 +177,11 @@ const TwitterSpace = async (whoseSpace, recordOrNot, outputPath) => {
         if (outputPath === undefined) { outputPath = "./" }
         let outputBroadcastTitle = broadcastTitle.replace(/[<>:;,?"*|/\\]/g, "").replace(/\s/g, "_")
         let output = `${outputPath}\\${whoseSpace}_${currentDateTime}_${outputBroadcastTitle}.m4a`;
-        console.log(output)
         if (recordOrNot != undefined) {
             if (recordOrNot === true || recordOrNot === "true") {
                 let checkStart = false;
                 try {
+                    console.log(output);
                     for (let checkspawn = 0, checkclose = 0, i = 0; i < 15; i++) {
                         const ffmpeg = child_process.exec(`ffmpeg.exe -i ${Spacem3u8} -y -vn -c:a copy ${output} `, { env: "./" }, (error) => {
                             if (error) {
@@ -222,6 +222,7 @@ const TwitterSpace = async (whoseSpace, recordOrNot, outputPath) => {
         else {
             let checkStart = false;
             try {
+                console.log(output);
                 for (let checkspawn = 0, checkclose = 0, i = 0; i < 15; i++) {
                     const ffmpeg = child_process.exec(`ffmpeg.exe -i ${Spacem3u8} -y -vn -c:a copy ${output} `, { env: "./" }, (error) => {
                         if (error) {
