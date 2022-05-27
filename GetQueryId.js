@@ -1,7 +1,7 @@
 import axios from "axios";
 import fs from "fs";
 
-const GetQueryId = async (QraphlName) => {
+async function GetQueryId(QraphlName) {
 
     //Get mainJsId for request Url
     let mainJsId = await axios("https://twitter.com", {
@@ -10,17 +10,15 @@ const GetQueryId = async (QraphlName) => {
         },
         "method": "GET"
     })
-        .then((response) => { return response.data.match(/(?<=web\/main\.).*?(?=\.js)/)[0] })
+        .then((response) => { return response.data.match(/(?<=web\/main\.).*?(?=\.js)/)[0]; })
         .catch(() => { console.log('get mainJsId fail.'); return -1; });
 
     if (mainJsId === -1) { return -1; }
 
     //Check main.xxxxxxxx.js is newest or not. If is newest then skip download main.js and output.
-
-
     let QueryIdListData = "";
-    try { QueryIdListData = JSON.parse(fs.readFileSync(`./QueryIdList.json`)) }
-    catch (err) { console.log('Failed to load QueryIdList.json now clear old file and rebuild one.'); fs.writeFileSync(`./QueryIdList.json`, JSON.stringify({})) }
+    try { QueryIdListData = JSON.parse(fs.readFileSync(`./QueryIdList.json`)); }
+    catch (err) { console.log('Failed to load QueryIdList.json now clear old file and rebuild one.'); fs.writeFileSync(`./QueryIdList.json`, JSON.stringify({})); }
 
     if (QueryIdListData.mainJsId != mainJsId) {
 
@@ -43,7 +41,7 @@ const GetQueryId = async (QraphlName) => {
 
                     operate = rawList[i];
                     operateId.push(operate.match(/(?<=queryId:").*?(?=")/)[0]);
-                    operateName.push(operate.match(/(?<=operationName:").*?(?=")/)[0])
+                    operateName.push(operate.match(/(?<=operationName:").*?(?=")/)[0]);
 
                 }
 
@@ -59,7 +57,7 @@ const GetQueryId = async (QraphlName) => {
         if (QueryIdListData === -1) { return -1; }
 
         //update QueryIdList.json
-        fs.writeFileSync(`./QueryIdList.json`, JSON.stringify(QueryIdListData, "", "\t"))
+        fs.writeFileSync(`./QueryIdList.json`, JSON.stringify(QueryIdListData, "", "\t"));
 
 
     }
@@ -68,19 +66,16 @@ const GetQueryId = async (QraphlName) => {
         const returnArray = new Array(QraphlName.length);
 
         for (let i = 0, operate = ""; i < QraphlName.length; i++) {
-            operate = QraphlName[i]
-            returnArray[i] = QueryIdListData.QueryId[`${operate}`]
+            operate = QraphlName[i];
+            returnArray[i] = QueryIdListData.QueryId[`${operate}`];
         }
 
         return returnArray;
 
     }
-    else if (typeof QraphlName === 'string') {
-
-        return QueryIdListData.QueryId[`${QraphlName}`];
-    }
+    else if (typeof QraphlName === 'string') { return QueryIdListData.QueryId[`${QraphlName}`]; }
     else {
-        console.log("Please only enter Array or string.")
+        console.log("Please only enter Array or string.");
         return -1;
     }
 
