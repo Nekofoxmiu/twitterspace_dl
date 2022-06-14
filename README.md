@@ -9,7 +9,13 @@ Please put ffmpeg.exe and twitterspace_dl.js in the same folder or set ffmpeg.ex
 > **use way**
 
 ```javascript
-TwitterSpace("TwitterUserScreenName", downloadSpaceOrNot, "downloadOutputPath")
+TwitterSpace(whoseSpace, configObj)
+
+//default
+configObj = {
+                "record": true,
+                "outputPath": "./",
+                "searchByName": true }
 ```
 **Async function**
 
@@ -23,11 +29,15 @@ TwitterSpace("TwitterUserScreenName", downloadSpaceOrNot, "downloadOutputPath")
 
 > **example**
 ```javascript
-TwitterSpace("omarupolka", true, "./")
+TwitterSpace("omarupolka")
 //Will start recording Polka's space and return object contain title name and m3u8 url (objectName.title/objectName.m3u8).
 
-TwitterSpace("omarupolka", false)
+TwitterSpace("omarupolka", {"record": false})
 //Will only return object contain title name and m3u8 url (objectName.title/objectName.m3u8).
+
+//1270551806993547265 is omarupolka's rest_id
+TwitterSpace("1270551806993547265", {"record": true, "outputPath": "./spacesave", "searchByName": false})
+//Will start recording Polka's space saving it to "./spacesave" and return object contain title name and m3u8 url (objectName.title/objectName.m3u8).
 ```
 ## Small additional module: GetQueryId.js
 ```
