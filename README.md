@@ -9,25 +9,35 @@ Please put ffmpeg.exe and twitterspace_dl.js in the same folder or set ffmpeg.ex
 > **use way**
 
 ```javascript
-TwitterSpace("TwitterUserScreenName", downloadSpaceOrNot, "downloadOutputPath")
+TwitterSpace(whoseSpace, configObj)
+
+//default
+configObj = {
+                "record": true,
+                "outputPath": "./",
+                "searchByName": true }
 ```
 **Async function**
 
-1. TwitterUserScreenName accept string.
-2. downloadSpaceOrNot accept true/false/"true"/"false" (Can skip. Default is true.)
-3. downloadOutputPath accept string (Can skip. Default is "./")
+1. whoseSpace accept string or number.
+2. record accept true/false/"true"/"false" (Can skip. Default is true.)
+3. outputPath accept string (Can skip. Default is "./")
 4. Return rule: 
    - User's space open and sucess get m3u8 return object contain title name and m3u8 url (objectName.title/objectName.m3u8).
    - User's space not open return 2
-   - Something get wrong return -1
+   - Something go wrong return -1
 
 > **example**
 ```javascript
-TwitterSpace("omarupolka", true, "./")
+TwitterSpace("omarupolka")
 //Will start recording Polka's space and return object contain title name and m3u8 url (objectName.title/objectName.m3u8).
 
-TwitterSpace("omarupolka", false)
+TwitterSpace("omarupolka", {"record": false})
 //Will only return object contain title name and m3u8 url (objectName.title/objectName.m3u8).
+
+//1270551806993547265 is omarupolka's rest_id
+TwitterSpace("1270551806993547265", {"record": true, "outputPath": "./spacesave", "searchByName": false})
+//Will start recording Polka's space saving it to "./spacesave" and return object contain title name and m3u8 url (objectName.title/objectName.m3u8).
 ```
 ## Small additional module: GetQueryId.js
 ```
