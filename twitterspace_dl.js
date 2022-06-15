@@ -371,8 +371,6 @@ async function TwitterSpace(whoseSpace, configObj) {
             console.log(`Get spaceId: [${spaceId}]`);
         }
 
-
-
         let broadcastIdPass = await axios(
 
             `https://twitter.com/i/api/graphql/${AudioSpaceByIdQraphl}/AudioSpaceById?variables=` + encodeURIComponent(JSON.stringify({
@@ -390,7 +388,8 @@ async function TwitterSpace(whoseSpace, configObj) {
                 "responsive_web_uc_gql_enabled": false,
                 "vibe_tweet_context_enabled": false,
                 "responsive_web_edit_tweet_api_enabled": false,
-                "standardized_nudges_for_misinfo_nudges_enabled": false
+                "standardized_nudges_for_misinfo_nudges_enabled": false,
+                "responsive_web_enhance_cards_enabled": false
             })), {
             "headers": {
                 "x-guest-token": guestToken,
@@ -399,7 +398,7 @@ async function TwitterSpace(whoseSpace, configObj) {
             "method": "GET"
         })
             .then((response) => { return response; })
-            .catch((err) => { `Get spaceId: [${broadcastIdPass}] fail`; return -1; });
+            .catch((err) => { `Get broadcastIdPass fail`; return -1; });
 
         if (broadcastIdPass === -1) { return -1; }
 
