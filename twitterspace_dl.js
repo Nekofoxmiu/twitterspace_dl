@@ -388,7 +388,7 @@ async function TwitterSpace(whoseSpace, configObj) {
                 "responsive_web_uc_gql_enabled": false,
                 "vibe_tweet_context_enabled": false,
                 "responsive_web_edit_tweet_api_enabled": false,
-                "standardized_nudges_for_misinfo_nudges_enabled": false,
+                "standardized_nudges_misinfo": false,
                 "responsive_web_enhance_cards_enabled": false
             })), {
             "headers": {
