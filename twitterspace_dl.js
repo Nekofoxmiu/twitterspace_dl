@@ -195,7 +195,7 @@ async function GetGuestToken(outdataOrNot) {
                 },
                 "method": "POST"
             })
-                .then((response) => { console.log(`Get x-guestToken: [ ${response.data.guest_token} ]`); return response.data.guest_token; })
+                .then((response) => { return response.data.guest_token; })
                 .catch((err) => { console.log('get x-guestToken fail.'); return Promise.reject(new Error(err)); });
 
             fs.writeFileSync(`./Token.json`, JSON.stringify({ "guestToken": guestToken }));
@@ -213,7 +213,7 @@ async function GetGuestToken(outdataOrNot) {
                 },
                 "method": "POST"
             })
-                .then((response) => { console.log(`Get x-guestToken: [ ${response.data.guest_token} ]`); return response.data.guest_token; })
+                .then((response) => { return response.data.guest_token; })
                 .catch((err) => { console.log('get x-guestToken fail.'); return Promise.reject(new Error(err)); });
 
             fs.writeFileSync(`./Token.json`, JSON.stringify({ "guestToken": guestToken }));
@@ -233,7 +233,7 @@ function getKeyByValue(object, value) {
 
 async function TwitterSpace(whoseSpace, configObj) {
     try {
-
+        console.log(whoseSpace)
         let userData;
         let userId = "";
         let currentDateTime = GetTime();
@@ -410,8 +410,6 @@ async function TwitterSpace(whoseSpace, configObj) {
                         .catch((err) => { console.log('get userId from screenName fail.'); return Promise.reject(new Error(err)); })
                 }
                 else {
-                    userId = whoseSpace;
-
                     whoseSpace = await axios(`https://twitter.com/i/api/graphql/${UserByRestIdQraphl.queryId}/UserByRestId?variables=` + encodeURIComponent(JSON.stringify({
                         "userId": `${userId}`,
                         "withSafetyModeUserFields": true,
