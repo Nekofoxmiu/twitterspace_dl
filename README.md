@@ -88,15 +88,51 @@ GetQueryId("QraphlName", noCheck, forcedUpdate)
 ```
 **Async function**
 QraphlName accept string and array.
-1. If input string will return string, input array will return array with same sequence.
-2. It will save all QueryId to ./QueryIdList.json.
+1. If input string will return object, input array will return object array with same sequence.
+2. It will save all Query data to ./QueryIdList.json.
 3. noCheck will skip version check.
 4. forcedUpdate will forced update Token.json.
 > **example**
 ```javascript
-GetQueryId(["HomeTimeline", "BizProfileFetchUser", "CommunityModeratorsTimeline"])
-//output: ['bkgUzmWplULW-ncjplP5Tw','o3OXj0LtB6MkqfR7o3_Fig','uJC_rT_soX7ePpHF9hXnpw']
-
+GetQueryId(["HomeTimeline", "BizProfileFetchUser", "UsersByRestIds"])
+//output: 
+    [
+        {
+            "queryId": "Sy5ZGGmqWbf8yu4gwsno1w",
+            "queryToken": [
+                "dont_mention_me_view_api_enabled",
+                "interactive_text_enabled",
+                "responsive_web_uc_gql_enabled",
+                "vibe_tweet_context_enabled",
+                "responsive_web_edit_tweet_api_enabled",
+                "standardized_nudges_misinfo",
+                "responsive_web_enhance_cards_enabled"
+            ]
+        },
+        {
+            "queryId": "o3OXj0LtB6MkqfR7o3_Fig",
+            "queryToken": [
+                ""
+            ]
+        },
+        {
+            "queryId": "f90_j1q82GqKXj5FbkrL1w",
+            "queryToken": [
+                ""
+            ]
+        }
+    ]
 GetQueryId("HomeTimeline")
-//output: bkgUzmWplULW-ncjplP5Tw
+//output: {
+			"queryId": "Sy5ZGGmqWbf8yu4gwsno1w",
+			"queryToken": [
+				"dont_mention_me_view_api_enabled",
+				"interactive_text_enabled",
+				"responsive_web_uc_gql_enabled",
+				"vibe_tweet_context_enabled",
+				"responsive_web_edit_tweet_api_enabled",
+				"standardized_nudges_misinfo",
+				"responsive_web_enhance_cards_enabled"
+			]
+		}
 ```
