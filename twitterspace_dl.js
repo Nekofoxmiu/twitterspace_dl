@@ -107,8 +107,14 @@ function ToStrKillQuote(jsonData) {
     return JSON.stringify(jsonData).replace(/\"/g, "");
 }
 
-function GetTime() {
-    const today = new Date();
+function GetTime(unixtime) {
+    let today;
+    if(unixtime) {
+        today = new Date(unixtime);
+    } 
+    else {
+        today = new Date();
+    }
 
     let month = '';
     if ((today.getMonth() + 1) < 10) {
@@ -541,7 +547,7 @@ async function TwitterSpace(whoseSpace, configObj) {
 
 
         let outputBroadcastTitle = broadcastTitle.replace(/[<>:;,?"*|/\\]/g, "").replace(/\s/g, "_");
-        let output = `${outputPath}\\${whoseSpace}_${currentDateTime}_${outputBroadcastTitle}.m4a`;
+        let output = `${outputPath}\\${whoseSpace}_${GetTime(spaceData.metadata.started_at)}_${outputBroadcastTitle}.m4a`;
 
 
         if (record) {
