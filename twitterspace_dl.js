@@ -152,7 +152,7 @@ async function createFfmpeg(whoseSpace, Spacem3u8, output, checktime, waitms) {
     try {
         console.log(output);
         for (let checkspawn = 0, checkclose = 0, i = 0; i < checktime; i++) {
-            const ffmpeg = child_process.exec(`ffmpeg.exe -i ${Spacem3u8} -y -vn -c:a copy ${output} `, { cwd: "./" }, (error) => {
+            const ffmpeg = child_process.exec(`ffmpeg.exe -i ${Spacem3u8} -y -vn -c:a copy "${output}" `, { cwd: "./" }, (error) => {
                 if (error) {
                     //console.error(error);
                 }
