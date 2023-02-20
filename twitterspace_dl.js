@@ -240,7 +240,7 @@ function getKeyByValue(object, value) {
 }
 //https://stackoverflow.com/questions/9907419/how-to-get-a-key-in-a-javascript-object-by-its-value
 
-async function TwitterSpace(whoseSpace, configObj) {
+async function TwitterSpace(whoseSpace, cookie, configObj) {
     try {
         //初始化開始
         let userData;
@@ -504,7 +504,7 @@ async function TwitterSpace(whoseSpace, configObj) {
         }
         let spaceId = await axios("https://twitter.com/i/api/fleets/v1/avatar_content?user_ids=" + userId + "&only_spaces=true", {
             "headers": {
-                "cookie": `auth_token=4314e8c91f4f150b6c825ec9a26c9bae32bb8c56`,
+                "cookie": `auth_token=${cookie}`,
                 "authorization": "Bearer AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA"
             },
             "method": "GET"
@@ -512,7 +512,7 @@ async function TwitterSpace(whoseSpace, configObj) {
 
         )
             .then((response) => { return response; })
-            .catch((err) => { console.log('get spaceId fail.'); return Promise.reject(new Error(err)); });
+            .catch((err) => { console.log('get spaceId fail. Make sure your cookie is correct.'); return Promise.reject(new Error(err)); });
 
         if (ToStrKillQuote(spaceId.data.users) === "{}") { console.log("Twitter space is not open."); return 2; }
         else {
