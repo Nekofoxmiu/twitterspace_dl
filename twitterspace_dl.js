@@ -4,11 +4,15 @@ import axios from "axios";
 import child_process from "child_process";
 import GetQueryId from "./GetQueryId.js"
 import fs from "fs"
+import * as path from 'path'
+import { fileURLToPath } from 'url';
 
 let guestToken = "";
 let UserByScreenNameQraphl = {};
 let UserByRestIdQraphl = {};
 let AudioSpaceByIdQraphl = {};
+
+const rootFloder = `${path.dirname(fileURLToPath(import.meta.url))}`;
 
 axios.defaults.retry = 10;
 axios.defaults.retryDelay = 1000;
@@ -152,7 +156,7 @@ async function createFfmpeg(whoseSpace, Spacem3u8, output, checktime, waitms) {
     try {
         console.log(output);
         for (let checkspawn = 0, checkclose = 0, i = 0; i < checktime; i++) {
-            const ffmpeg = child_process.exec(`ffmpeg.exe -i ${Spacem3u8} -y -vn -c:a copy "${output}" `, { cwd: "./" }, (error) => {
+            const ffmpeg = child_process.exec(`ffmpeg.exe -i ${Spacem3u8} -y -vn -c:a copy ${output} `, { cwd: `${rootFloder}\\..\\..` }, (error) => {
                 if (error) {
                     //console.error(error);
                 }
@@ -189,7 +193,7 @@ async function createFfmpeg(whoseSpace, Spacem3u8, output, checktime, waitms) {
 async function GetGuestToken(outdataOrNot) {
 
     outdataOrNot = outdataOrNot || false;
-    try { guestToken = JSON.parse(fs.readFileSync(`./Token.json`)); }
+    try { guestToken = JSON.parse(fs.readFileSync(`${rootFloder}\\data_json\\Token.json`)); }
     catch (err) {
         try {
             console.log('Failed to load Token.json now clear old file and rebuild one.');
@@ -203,7 +207,7 @@ async function GetGuestToken(outdataOrNot) {
                 .then((response) => { return response.data.guest_token; })
                 .catch((err) => { console.log('get x-guestToken fail.'); return Promise.reject(new Error(err)); });
 
-            fs.writeFileSync(`./Token.json`, JSON.stringify({ "guestToken": guestToken }));
+            fs.writeFileSync(`${rootFloder}\\data_json\\Token.json`, JSON.stringify({ "guestToken": guestToken }));
 
             return guestToken;
         } catch (err) {
@@ -221,7 +225,7 @@ async function GetGuestToken(outdataOrNot) {
                 .then((response) => { return response.data.guest_token; })
                 .catch((err) => { console.log('get x-guestToken fail.'); return Promise.reject(new Error(err)); });
 
-            fs.writeFileSync(`./Token.json`, JSON.stringify({ "guestToken": guestToken }));
+            fs.writeFileSync(`${rootFloder}\\data_json\\Token.json`, JSON.stringify({ "guestToken": guestToken }));
 
             return guestToken;
         } catch (err) {
@@ -253,7 +257,7 @@ async function TwitterSpace(whoseSpace, configObj) {
         if (!configObj) {
             configObj = {
                 "record": true,
-                "outputPath": "./",
+                "outputPath": `${rootFloder}\\..\\..`,
                 "searchByName": true,
                 "saveIds": false
             };
@@ -299,7 +303,7 @@ async function TwitterSpace(whoseSpace, configObj) {
                 throw new Error("record only accept boolean or string");
         }
 
-        if (!configObj.outputPath) { outputPath = "./"; }
+        if (!configObj.outputPath) { outputPath = path.resolve("./"); }
         else { outputPath = configObj.outputPath; }
         if (typeof outputPath !== "string") { throw new Error("outputPath type error"); };
 
@@ -378,7 +382,7 @@ async function TwitterSpace(whoseSpace, configObj) {
             });
 
         if (saveIds) {
-            try { idListData = JSON.parse(fs.readFileSync(`./ID_List.json`)); }
+            try { idListData = JSON.parse(fs.readFileSync(`${rootFloder}\\data_json\\ID_List.json`)); }
             catch (err) {
                 console.log('Failed to load ID_List.json now clear old file and rebuild one.');
                 fs.writeFileSync(`ID_List.json`, JSON.stringify({}));
@@ -404,6 +408,12 @@ async function TwitterSpace(whoseSpace, configObj) {
                         "screen_name": `${whoseSpace}`,
                         "withSafetyModeUserFields": true,
                         "withSuperFollowsUserFields": true
+                    })) +
+                    "&features=" + encodeURIComponent(JSON.stringify({
+                        "responsive_web_twitter_blue_verified_badge_is_enabled": true,
+                        "verified_phone_label_enabled": false,
+                        "responsive_web_twitter_blue_new_verification_copy_is_enabled": false,
+                        "responsive_web_graphql_timeline_navigation_enabled": true
                     })), {
                         "headers": {
                             "x-guest-token": guestToken,
@@ -448,7 +458,13 @@ async function TwitterSpace(whoseSpace, configObj) {
                     "screen_name": `${whoseSpace}`,
                     "withSafetyModeUserFields": true,
                     "withSuperFollowsUserFields": true
-                })), {
+                }) +
+                "&features=" + encodeURIComponent(JSON.stringify({
+                    "responsive_web_twitter_blue_verified_badge_is_enabled": true,
+                    "verified_phone_label_enabled": false,
+                    "responsive_web_twitter_blue_new_verification_copy_is_enabled": false,
+                    "responsive_web_graphql_timeline_navigation_enabled": true
+                }))), {
                     "headers": {
                         "x-guest-token": guestToken,
                         "authorization": "Bearer AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA"
@@ -555,7 +571,8 @@ async function TwitterSpace(whoseSpace, configObj) {
             return {
                 "title": broadcastTitle,
                 "m3u8": Spacem3u8,
-                "nameOrId": userId,
+                "name": whoseSpace,
+                "id":userId,
                 "spaceId": spaceId,
                 "broadcastId": broadcastId,
                 "spaceData": spaceData,
@@ -566,7 +583,8 @@ async function TwitterSpace(whoseSpace, configObj) {
             return {
                 "title": broadcastTitle,
                 "m3u8": Spacem3u8,
-                "nameOrId": userId,
+                "name": whoseSpace,
+                "id":userId,
                 "spaceId": spaceId,
                 "broadcastId": broadcastId,
                 "spaceData": spaceData,
@@ -670,7 +688,8 @@ TwitterSpace.getM3u8_FromSpaceId = async (spaceId) => {
 }
 TwitterSpace.getTitle = async (whoseSpace) => { return TwitterSpace(whoseSpace, { "record": false }).then((res) => { return res.title; }) };
 TwitterSpace.getM3u8 = async (whoseSpace) => { return TwitterSpace(whoseSpace, { "record": false }).then((res) => { return res.m3u8; }) };
-TwitterSpace.getNameOrId = async (whoseSpace) => { return TwitterSpace(whoseSpace, { "record": false }).then((res) => { return res.nameOrId; }) };
+TwitterSpace.getName = async (whoseSpace) => { return TwitterSpace(whoseSpace, { "record": false }).then((res) => { return res.name; }) };
+TwitterSpace.getId = async (whoseSpace) => { return TwitterSpace(whoseSpace, { "record": false }).then((res) => { return res.id; }) };
 TwitterSpace.getSpaceId = async (whoseSpace) => { return TwitterSpace(whoseSpace, { "record": false }).then((res) => { return res.spaceId; }) };
 TwitterSpace.getBroadcastId = async (whoseSpace) => { return TwitterSpace(whoseSpace, { "record": false }).then((res) => { return res.broadcastId; }) };
 TwitterSpace.getSpaceData = async (whoseSpace) => { return TwitterSpace(whoseSpace, { "record": false }).then((res) => { return res.spaceData; }) };
