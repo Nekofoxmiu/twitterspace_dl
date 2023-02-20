@@ -9,7 +9,7 @@ Please put ffmpeg.exe and twitterspace_dl.js in the same folder or set ffmpeg.ex
 > **use way**
 
 ```javascript
-TwitterSpace(whoseSpace, configObj)
+TwitterSpace(whoseSpace, cookie, configObj)
 
 //default
 configObj = {
@@ -23,19 +23,21 @@ configObj = {
 
 1. whoseSpace accept string or number.  
 
-2. record accept true/false/"true"/"false"  
+2. cookie is Twitter's "auth_token"
+
+3. record accept true/false/"true"/"false"  
 (When true it will start recording space.)  
 
-3. outputPath accept string  
+4. outputPath accept string  
 
-4. searchByName accept string or number  
+5. searchByName accept string or number  
 (When true it will get space data by username, or it will get space data by rest_id.)  
 
-5. saveIds accept true/false/"true"/"false"   
+6. saveIds accept true/false/"true"/"false"   
 (When true it will get space data by saving data, if it is not in data will save it to "./ID_List.json".)  
 **NOTICE : When saveIds true space data will only contain name and id**
 
-6. Return rule: 
+7. Return rule: 
    - User's space open and sucess get m3u8 return object:
    ```javascript
    
