@@ -78,6 +78,18 @@ obj.spaceData = {
 }
 */
 ```
+8. Some alias
+```
+TwitterSpace.getTitle(whoseSpace);
+TwitterSpace.getM3u8(whoseSpace);
+TwitterSpace.getName(whoseSpace);
+TwitterSpace.getId(whoseSpace);
+TwitterSpace.getSpaceId(whoseSpace);
+TwitterSpace.getBroadcastId(whoseSpace);
+TwitterSpace.getSpaceData(whoseSpace);
+TwitterSpace.getUserData(whoseSpace);
+//Just call the above TwitterSpace function won't save anytime.
+```
 ## Small additional module: GetQueryId.js
 ```
 This module import axios too.
