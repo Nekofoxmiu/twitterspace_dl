@@ -78,8 +78,9 @@ obj.spaceData = {
 }
 */
 ```
-8. Some alias
-```
+8. Some alias  
+
+```javascript
 TwitterSpace.getTitle(whoseSpace);
 TwitterSpace.getM3u8(whoseSpace);
 TwitterSpace.getName(whoseSpace);
