@@ -151,3 +151,51 @@ GetQueryId("HomeTimeline")
 			]
 		}
 ```
+## Realese EXE
+
+Just past the url without ?=20 or something like that, then start to download.  
+  
+source code:  
+```JS
+import TwitterSpace from 'twitterspace_dl';
+import child_process from "child_process";
+import * as readlinePromises from 'node:readline/promises';
+import path from 'path';
+import { fileURLToPath } from 'url';
+function wait(ms) {
+    return new Promise(resolve => setTimeout(() => resolve(), ms));
+};
+const mainFolder = path.dirname(fileURLToPath(import.meta.url));
+const openplace = process.cwd();
+
+console.log("資料存在：", mainFolder, " 要清除乾淨請至此資料夾刪除");
+let rl = readlinePromises.createInterface({
+  input: process.stdin,
+  output: process.stdout,
+  terminal: false
+});
+rl.on('line', line => {
+    console.log(`Received: ${line}`);
+    if (line === "close") {
+      rl.close();
+    } else {
+      rl.prompt();
+    }
+  });
+
+ 
+let URL = await rl.question('URL? \n');
+rl.pause();
+console.log("處理中，請稍候");
+let spaceId;
+try { spaceId = URL.match(/(?<=spaces\/).+/)[0];} catch {console.log("網址輸入錯誤"); await wait(5000).then(() => {process.exit();});}
+let spacedata = await TwitterSpace.getSpaceData_FromSpaceId(spaceId);
+console.log(spacedata)
+child_process.exec(`start cmd /K ffmpeg -i ${spacedata.m3u8} "${openplace}/${spacedata.title}.m4a"`, {
+    cwd: mainFolder
+  }, async (error, stdout, stderr) => {
+    if (stderr) console.log(stderr);
+  });
+  await rl.question('按任意鍵關閉');
+  rl.close;
+```
