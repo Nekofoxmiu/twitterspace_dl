@@ -413,7 +413,9 @@ async function TwitterSpace(whoseSpace, cookie, configObj) {
                         "responsive_web_twitter_blue_verified_badge_is_enabled": true,
                         "verified_phone_label_enabled": false,
                         "responsive_web_twitter_blue_new_verification_copy_is_enabled": false,
-                        "responsive_web_graphql_timeline_navigation_enabled": true
+                        "responsive_web_graphql_timeline_navigation_enabled": true,
+                        "responsive_web_graphql_exclude_directive_enabled": false,
+                        "responsive_web_graphql_skip_user_profile_image_extensions_enabled": false
                     })), {
                         "headers": {
                             "x-guest-token": guestToken,
