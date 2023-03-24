@@ -14,9 +14,16 @@ async function GetQueryId(QraphlName, noCheck, forcedUpdate) {
         let QueryIdListData = {};
         try { QueryIdListData = JSON.parse(fs.readFileSync(`${rootFloder}\\data_json\\QueryIdList.json`)); }
         catch (err) {
-            console.log('Failed to load QueryIdList.json now clear old file and rebuild one.');
-            fs.writeFileSync(`${rootFloder}\\data_json\\QueryIdList.json`, JSON.stringify({}));
-            QueryIdListData = {};
+            try { 
+                console.log('Failed to load QueryIdList.json now clear old file and rebuild one.');
+                fs.writeFileSync(`${rootFloder}\\data_json\\QueryIdList.json`, JSON.stringify({}));
+                QueryIdListData = {};
+            }
+             catch (err) {
+                 fs.mkdirSync(`${rootFloder}\\data_json`, { recursive: true });
+                 fs.writeFileSync(`${rootFloder}\\data_json\\QueryIdList.json`, JSON.stringify({}));
+                 QueryIdListData = {};
+             }
         }
 
         if (!noCheck || !Object.keys(QueryIdListData).length || forcedUpdate) {
