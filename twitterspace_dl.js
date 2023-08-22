@@ -683,13 +683,13 @@ TwitterSpace.getSpaceData_FromSpaceId = async (spaceId) => {
 TwitterSpace.getM3u8_FromSpaceId = async (spaceId) => {
     return (await TwitterSpace.getSpaceData_FromSpaceId(spaceId)).m3u8;
 }
-TwitterSpace.getTitle = async (whoseSpace) => { return TwitterSpace(whoseSpace, { "record": false }).then((res) => { return res.title; }) };
-TwitterSpace.getM3u8 = async (whoseSpace) => { return TwitterSpace(whoseSpace, { "record": false }).then((res) => { return res.m3u8; }) };
-TwitterSpace.getName = async (whoseSpace) => { return TwitterSpace(whoseSpace, { "record": false }).then((res) => { return res.name; }) };
-TwitterSpace.getId = async (whoseSpace) => { return TwitterSpace(whoseSpace, { "record": false }).then((res) => { return res.id; }) };
-TwitterSpace.getSpaceId = async (whoseSpace) => { return TwitterSpace(whoseSpace, { "record": false }).then((res) => { return res.spaceId; }) };
-TwitterSpace.getBroadcastId = async (whoseSpace) => { return TwitterSpace(whoseSpace, { "record": false }).then((res) => { return res.broadcastId; }) };
-TwitterSpace.getSpaceData = async (whoseSpace) => { return TwitterSpace(whoseSpace, { "record": false }).then((res) => { return res.spaceData; }) };
-TwitterSpace.getUserData = async (whoseSpace) => { return TwitterSpace(whoseSpace, { "record": false }).then((res) => { return res.userData; }) };
+TwitterSpace.getTitle = async (whoseSpace, auth_data) => { return TwitterSpace(whoseSpace, auth_data, { "record": false }).then((res) => { return res.title; }) };
+TwitterSpace.getM3u8 = async (whoseSpace, auth_data) => { return TwitterSpace(whoseSpace, auth_data, { "record": false }).then((res) => { return res.m3u8; }) };
+TwitterSpace.getName = async (whoseSpace, auth_data) => { return TwitterSpace(whoseSpace, auth_data, { "record": false }).then((res) => { return res.name; }) };
+TwitterSpace.getId = async (whoseSpace, auth_data) => { return TwitterSpace(whoseSpace, auth_data, { "record": false }).then((res) => { return res.id; }) };
+TwitterSpace.getSpaceId = async (whoseSpace, auth_data) => { return TwitterSpace(whoseSpace, auth_data, { "record": false }).then((res) => { return res.spaceId; }) };
+TwitterSpace.getBroadcastId = async (whoseSpace, auth_data) => { return TwitterSpace(whoseSpace, auth_data, { "record": false }).then((res) => { return res.broadcastId; }) };
+TwitterSpace.getSpaceData = async (whoseSpace, auth_data) => { return TwitterSpace(whoseSpace, auth_data, { "record": false }).then((res) => { return res.spaceData; }) };
+TwitterSpace.getUserData = async (whoseSpace, auth_data) => { return TwitterSpace(whoseSpace, auth_data, { "record": false }).then((res) => { return res.userData; }) };
 
 export default TwitterSpace;
