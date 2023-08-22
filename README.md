@@ -9,7 +9,7 @@ Please put ffmpeg.exe and twitterspace_dl.js in the same folder or set ffmpeg.ex
 > **use way**
 
 ```javascript
-TwitterSpace(whoseSpace, cookie, configObj)
+TwitterSpace(whoseSpace, auth_data, configObj)
 
 //default
 configObj = {
@@ -18,6 +18,14 @@ configObj = {
   "searchByName": true,
   "saveIds": false
 }
+
+//auth_data format
+auth_data = {
+  "ct0": "xxxxxxxxxxxxxxxxxxx",
+  "xcsrf": "xxxxxxxxxxxxxxxxxxx",
+  "auth": "xxxxxxxxxxxxxxxxxxxxx"
+}
+
 ```
 **Async function**
 
@@ -58,17 +66,33 @@ and "x-csrf-token" which you need to check your browser's dev-tool.
 
 > **example**
 ```javascript
-TwitterSpace("omarupolka")
+TwitterSpace("omarupolka", {
+  "ct0": "xxxxxxxxxxxxxxxxxxx",
+  "xcsrf": "xxxxxxxxxxxxxxxxxxx",
+  "auth": "xxxxxxxxxxxxxxxxxxxxx"
+})
 //Will start recording Polka's space and return fulldata object.
 
-TwitterSpace("omarupolka", {"record": false})
+TwitterSpace("omarupolka", {
+  "ct0": "xxxxxxxxxxxxxxxxxxx",
+  "xcsrf": "xxxxxxxxxxxxxxxxxxx",
+  "auth": "xxxxxxxxxxxxxxxxxxxxx"
+}, {"record": false})
 //Will only return fulldata object.
 
 //1270551806993547265 is omarupolka's rest_id
-TwitterSpace("1270551806993547265", {"record": true, "outputPath": "./spacesave", "searchByName": false})
+TwitterSpace("1270551806993547265", {
+  "ct0": "xxxxxxxxxxxxxxxxxxx",
+  "xcsrf": "xxxxxxxxxxxxxxxxxxx",
+  "auth": "xxxxxxxxxxxxxxxxxxxxx"
+}, {"record": true, "outputPath": "./spacesave", "searchByName": false})
 //Will start recording Polka's space saving it to "./spacesave" and return fulldata object.
 
-TwitterSpace("1270551806993547265", {"record": true, "outputPath": "./spacesave", "searchByName": false, "saveIds": true})
+TwitterSpace("1270551806993547265", {
+  "ct0": "xxxxxxxxxxxxxxxxxxx",
+  "xcsrf": "xxxxxxxxxxxxxxxxxxx",
+  "auth": "xxxxxxxxxxxxxxxxxxxxx"
+}, {"record": true, "outputPath": "./spacesave", "searchByName": false, "saveIds": true})
 /*
 Will start recording Polka's space saving it to "./spacesave", create json file save ids, 
 and return object that the obj.spaceData only contain name and id.
@@ -82,15 +106,20 @@ obj.spaceData = {
 8. Some alias  
 
 ```javascript
-TwitterSpace.getTitle(whoseSpace);
-TwitterSpace.getM3u8(whoseSpace);
-TwitterSpace.getName(whoseSpace);
-TwitterSpace.getId(whoseSpace);
-TwitterSpace.getSpaceId(whoseSpace);
-TwitterSpace.getBroadcastId(whoseSpace);
-TwitterSpace.getSpaceData(whoseSpace);
-TwitterSpace.getUserData(whoseSpace);
-//Just call the above TwitterSpace function won't save anytime.
+//For some special case, it can save time.
+TwitterSpace.getM3u8_FromBroadcastId(broadcastId);
+TwitterSpace.getM3u8_FromSpaceId(spaceId);
+TwitterSpace.getSpaceData_FromSpaceId(spaceId);
+
+//Follwing alias just call the main function it won't save any time.
+TwitterSpace.getTitle(whoseSpace, auth_data);
+TwitterSpace.getM3u8(whoseSpace, auth_data);
+TwitterSpace.getName(whoseSpace, auth_data);
+TwitterSpace.getId(whoseSpace, auth_data);
+TwitterSpace.getSpaceId(whoseSpace, auth_data);
+TwitterSpace.getBroadcastId(whoseSpace, auth_data);
+TwitterSpace.getSpaceData(whoseSpace, auth_data);
+TwitterSpace.getUserData(whoseSpace, auth_data);
 ```
 ## Small additional module: GetQueryId.js
 ```
