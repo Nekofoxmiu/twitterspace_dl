@@ -29,9 +29,14 @@ async function GetQueryId(QraphlName, noCheck, forcedUpdate) {
         if (!noCheck || !Object.keys(QueryIdListData).length || forcedUpdate) {
             //Get apiId for request Url
             apiId = await axios("https://twitter.com/", {
+                "headers": {
+                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.93 Safari/537.36",
+                    "cookie": "guest_id=v1%3A168411793373102941"
+                },
                 "method": "GET"
             })
                 .then((response) => {
+                    //console.log(response);
                     return response.data.match(/(?<=\,api\:\").*?(?=\"\,\")/)[0];
                 })
                 .catch((err) => { console.log('get api Id fail.'); Promise.reject(new Error(err)); });
@@ -54,6 +59,7 @@ async function GetQueryId(QraphlName, noCheck, forcedUpdate) {
 
             //Prase main.xxxxxxxx.js file to get queryId 
             //let mainJsUrl = 'https://abs.twimg.com/responsive-web/client-web-legacy/main.' + apiId + '.js'; //OLD WAY
+            //console.log(apiId);
             let mainJsUrl = 'https://abs.twimg.com/responsive-web/client-web-legacy/api.' + apiId + "a" + '.js';
             QueryIdListData = await axios(mainJsUrl, {
                 "headers": {
@@ -62,8 +68,8 @@ async function GetQueryId(QraphlName, noCheck, forcedUpdate) {
                 "method": "GET"
             })
                 .then((response) => {
-
-                    let rawList = response.data.match(/queryId\:\"([^"]+)\"\,operationName\:\"([^"]+)\"\,operationType\:\"query\"\,metadata\:\{featureSwitches\:\[([^\[\]]+)?(?=\]\})/g);
+                    //console.log(response);
+                    let rawList = response.data.match(/queryId\:\"([^"]+)\"\,operationName\:\"([^"]+)\"\,operationType\:\"query\"\,metadata\:\{featureSwitches\:\[([^\[\]]+)\](?=\,fieldToggles\:)/g);
 
                     let operateName = [];
                     let operateId = [];

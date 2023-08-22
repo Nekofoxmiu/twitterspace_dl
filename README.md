@@ -23,7 +23,8 @@ configObj = {
 
 1. whoseSpace accept string or number.  
 
-2. cookie is Twitter's "auth_token"
+2. auth_data is an object that must contain Twitter's "auth_token", "ct0" 
+and "x-csrf-token" which you need to check your browser's dev-tool.
 
 3. record accept true/false/"true"/"false"  
 (When true it will start recording space.)  
