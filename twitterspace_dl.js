@@ -2,694 +2,361 @@
 
 import axios from "axios";
 import child_process from "child_process";
-import GetQueryId from "./GetQueryId.js"
-import fs from "fs"
-import * as path from 'path'
+import GetQueryId from "./GetQueryId.js";
+import fs from "fs";
+import * as path from 'path';
 import { fileURLToPath } from 'url';
 
-let guestToken = "";
-let UserByScreenNameQraphl = {};
-let UserByRestIdQraphl = {};
-let AudioSpaceByIdQraphl = {};
+class TwitterSpace {
+    constructor(cookie, configObj = {}) {
+        this.cookie = cookie;
+        this.rootFolder = `${path.dirname(fileURLToPath(import.meta.url))}`;
+        this.guestToken = "";
+        this.UserByScreenNameQraphl = {};
+        this.UserByRestIdQraphl = {};
+        this.AudioSpaceByIdQraphl = {};
+        this.configObj = Object.assign({
+            record: true,
+            outputPath: path.resolve(this.rootFolder, '..', '..'),
+            searchByName: true,
+            saveIds: false
+        }, configObj);
+        this.botConfig = {
+            TwitterAuthToken: this.cookie.auth,
+            TwitterCSRFToken: this.cookie.ct0
+        };
+        this.getQueryId = new GetQueryId(this.botConfig);
 
-const rootFloder = `${path.dirname(fileURLToPath(import.meta.url))}`;
-
-axios.defaults.retry = 10;
-axios.defaults.retryDelay = 1000;
-axios.defaults.timeout = 10000;
-axios.defaults.headers["User-Agent"] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.93 Safari/537.36";
-
-axios.interceptors.response.use(undefined, async (err) => {
-    try {
-        console.dir(err.response.data)
-
-        let config = err.config;
-        // If config does not exist or the retry option is not set, reject
-        if (!config || !config.retry) return Promise.reject(err);
-
-        // Create new promise to handle exponential backoff. formula (2^c - 1 / 2) * 1000(for mS to seconds)
-        const backOffDelay = config.retryDelay ? (((1 / 2) * (Math.pow(2, config.__retryCount) - 1)) * 1000) : 1;
-
-
-        // Set the variable for keeping track of the retry count
-        config.__retryCount = config.__retryCount || 0;
-
-        // Check if we've maxed out the total number of retries
-        if (config.__retryCount >= config.retry) {
-            // Reject with the error
-            return Promise.reject(err);
-        }
-
-        // Increase the retry count
-        config.__retryCount += 1;
-
-        // Create new promise to handle exponential backoff
-        let backoff = new Promise((resolve) => {
-            setTimeout(() => {
-                resolve();
-            }, backOffDelay);
+        this.twitterSpaceAxios = axios.create({
+            withCredentials: true,
+            headers: {
+                'Authorization': "Bearer AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA",
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.93 Safari/537.36',
+            },
+            timeout: 10000,
+            retry: 10,
+            retryDelay: 1000
         });
 
-        if (err.response) {
-            if (err.response.status === 403) {
-                if (config.headers) {
-                    if (config.headers["x-guest-token"]) {
-                        const response = await GetGuestToken(true);
-                        config.headers["x-guest-token"] = response;
-                        guestToken = response;
-                    }
-                }
-            }
-
-            if (err.response.status === 404) {
-                if (config.url) {
-                    if ((config.url).match(/UserByScreenName/) || (config.url).match(/AudioSpaceById/) || (config.url).match(/UserByRestId/)) {
-
-                        await GetQueryId(['UserByScreenName', 'UserByRestId', 'AudioSpaceById'], false, true)
-                            .then((response) => {
-                                console.log(`Updated Qraphl List`);
-                                UserByScreenNameQraphl = response[0];
-                                UserByRestIdQraphl = response[1];
-                                AudioSpaceByIdQraphl = response[2];
-
-                                console.log(`Updated UserByScreenNameQraphl: [ ${UserByScreenNameQraphl.queryId} ]`);
-                                console.log(`Updated UserByRestIdQraphl: [ ${UserByRestIdQraphl.queryId} ]`);
-                                console.log(`Updated AudioSpaceByIdQraphl: [ ${AudioSpaceByIdQraphl.queryId} ]`);
-                            })
-                            .catch((err) => {
-                                console.log('Updated Qraphl List fail.');
-                                return Promise.reject(new Error(err))
-                            });
+        
+        this.twitterSpaceAxios.interceptors.response.use(undefined, async (err) => {
+            return this.retryInterceptor(err);
+        });
+        
 
 
-                        if ((config.url).match(/UserByScreenName/)) { config.url = (config.url).replace(/(?<=api\/graphql\/).+(?=\/UserByScreenName)/, UserByScreenNameQraphl.queryId) }
-                        if ((config.url).match(/UserByRestId/)) { config.url = (config.url).replace(/(?<=api\/graphql\/).+(?=\/UserByRestId)/, UserByRestIdQraphl.queryId) }
-                        if ((config.url).match(/AudioSpaceById/)) {
-                            config.url = (config.url)
-                                .replace(/(?<=api\/graphql\/).+(?=\/AudioSpaceById)/, AudioSpaceByIdQraphl.queryId)
-                                .replace(/(?<=\&features\=).+/, featuresStringBuilder(AudioSpaceByIdQraphl.queryToken));
-                        }
-                    }
-                }
-            }
-        }
 
-        // Return the promise in which recalls axios to retry the request
-        await backoff;
-        return await axios(config);
-    } catch (err) {
-        console.log(err);
-    }
-});
-
-function ToStrKillQuote(jsonData) {
-    return JSON.stringify(jsonData).replace(/\"/g, "");
-}
-
-function GetTime(unixtime) {
-    let today;
-    if (unixtime) {
-        today = new Date(unixtime);
-    }
-    else {
-        today = new Date();
     }
 
-    let month = '';
-    if ((today.getMonth() + 1) < 10) {
-        month = '0' + (today.getMonth() + 1);
-    }
-    else {
-        month = (today.getMonth() + 1);
-    }
 
-    const AddZero = (time) => {
-        if (time < 10) {
-            time = '0' + time;
-            return time;
-        }
-        else {
-            return time;
-        }
-    };
-
-    let currentDateTime = today.getFullYear() + '' +
-        month + '' +
-        AddZero(today.getDate()) + '_' +
-        AddZero(today.getHours()) + '_' +
-        AddZero(today.getMinutes());
-
-    return currentDateTime;
-}
-
-function wait(ms) {
-    return new Promise(resolve => setTimeout(() => resolve(), ms));
-}
-
-async function createFfmpeg(whoseSpace, Spacem3u8, output, checktime, waitms) {
-    let checkStart = false;
-    try {
-        console.log(output);
-        for (let checkspawn = 0, checkclose = 0, i = 0; i < checktime; i++) {
-            const ffmpeg = child_process.exec(`ffmpeg.exe -i ${Spacem3u8} -y -vn -c:a copy ${output} `, { cwd: `${rootFloder}\\..\\..` }, (error) => {
-                if (error) {
-                    //console.error(error);
-                }
-            });
-
-            ffmpeg.on('spawn', () => { checkspawn++; });
-            ffmpeg.on('close', (code) => {
-                if (code === 1 && code !== 0) {
-                    console.log(`Success get m3u8 but it still empty. Retry...(${i + 1}/15)`);
-                    checkclose++;
-                }
-
-            });
-            await wait(waitms);
-            if (checkspawn !== checkclose) {
-                checkStart = true;
-                break;
-            }
-        }
-    }
-    catch (err) {
-        throw new Error(err);
-    }
-    if (checkStart) {
-        console.log(`${whoseSpace}'s space start recording.`);
-        return 0;
-    }
-    else {
-        throw new Error("Download fail.");
-    }
-}
-
-//Get x-guestToken for headers
-async function GetGuestToken(outdataOrNot) {
-
-    outdataOrNot = outdataOrNot || false;
-    try { guestToken = JSON.parse(fs.readFileSync(`${rootFloder}\\data_json\\Token.json`)); }
-    catch (err) {
+    async retryInterceptor(err) {
         try {
-            console.log('Failed to load Token.json now clear old file and rebuild one.');
+            console.log(err.config)
+            const config = err.config;
+            if (!config || !config.retry) return Promise.reject(err?.response?.data);
 
-            guestToken = await axios("https://api.twitter.com/1.1/guest/activate.json", {
-                "headers": {
-                    "authorization": "Bearer AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA"
-                },
-                "method": "POST"
-            })
-                .then((response) => { return response.data.guest_token; })
-                .catch((err) => { console.log('get x-guestToken fail.'); return Promise.reject(new Error(err)); });
+            let delay_pow = config.__retryCount >= 7 ? 7 : config.__retryCount;
+            const backOffDelay = config.retryDelay ? (((1 / 2) * (Math.pow(2, delay_pow) - 1)) * 1000) : 1;
 
-            fs.writeFileSync(`${rootFloder}\\data_json\\Token.json`, JSON.stringify({ "guestToken": guestToken }));
+            config.__retryCount = config.__retryCount || 0;
+            if (config.__retryCount >= config.retry) return Promise.reject(err?.response?.data);
 
+            config.__retryCount += 1;
+
+            let backoff = new Promise(resolve => setTimeout(resolve, backOffDelay));
+
+            if (err.response) {
+                if (err.response.status === 403 && config.headers["x-guest-token"]) {
+                    const response = await this.getGuestToken(true);
+                    config.headers["x-guest-token"] = response;
+                    this.guestToken = response;
+                }
+
+                if (err.response.status === 404 && config.url && (config.url).match(/UserByScreenName|AudioSpaceById|UserByRestId/)) {
+                    const updatedQueries = await this.updateQueryIds();
+                    this.replaceQueryIds(config, updatedQueries);
+                }
+            }
+
+            await backoff;
+            return await this.twitterSpaceAxios(config);
+        } catch (err) {
+            console.log(err);
+        }
+    }
+
+    async updateQueryIds() {
+        try {
+            await this.getQueryId.tryUpdate();
+            this.UserByScreenNameQraphl = await this.getQueryId.getQueryIdAndToken('UserByScreenName');
+            this.UserByRestIdQraphl = await this.getQueryId.getQueryIdAndToken('UserByRestId');
+            this.AudioSpaceByIdQraphl = await this.getQueryId.getQueryIdAndToken('AudioSpaceById');
+            return { UserByScreenNameQraphl: this.UserByScreenNameQraphl, UserByRestIdQraphl: this.UserByRestIdQraphl, AudioSpaceByIdQraphl: this.AudioSpaceByIdQraphl };
+        } catch (err) {
+            console.error('Updated Qraphl List fail.', err);
+        }
+    }
+
+    replaceQueryIds(config, updatedQueries) {
+        const { UserByScreenNameQraphl, UserByRestIdQraphl, AudioSpaceByIdQraphl } = updatedQueries;
+        if (config.url.match(/UserByScreenName/)) config.url = config.url.replace(/(?<=api\/graphql\/).+(?=\/UserByScreenName)/, UserByScreenNameQraphl.queryId);
+        if (config.url.match(/UserByRestId/)) config.url = config.url.replace(/(?<=api\/graphql\/).+(?=\/UserByRestId)/, UserByRestIdQraphl.queryId);
+        if (config.url.match(/AudioSpaceById/)) {
+            config.url = config.url.replace(/(?<=api\/graphql\/).+(?=\/AudioSpaceById)/, AudioSpaceByIdQraphl.queryId)
+                .replace(/(?<=\&features\=).+/, this.featuresStringBuilder(AudioSpaceByIdQraphl.queryToken));
+        }
+    }
+
+    async getGuestToken(forceUpdate = false) {
+        const tokenPath = path.join(this.rootFolder, '..', 'data_json', 'Token.json');
+        if (!forceUpdate) {
+            try {
+                const tokenData = JSON.parse(fs.readFileSync(tokenPath));
+                return tokenData.guestToken;
+            } catch (err) {
+                console.log('Token.json 讀取失敗，將嘗試重新獲取 token。');
+            }
+        }
+
+        try {
+            const response = await axios.post("https://api.twitter.com/1.1/guest/activate.json", {}, {
+                headers: {
+                    "authorization": `Bearer AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA`,
+                }
+            });
+            const guestToken = response.data.guest_token;
+            fs.writeFileSync(tokenPath, JSON.stringify({ guestToken }));
             return guestToken;
+        } catch (err) {
+            console.error('獲取 x-guestToken 失敗：', err.message);
+            throw err;
+        }
+    }
+
+    featuresStringBuilder(Feature) {
+        let outputFeatures = {};
+        for (let i = 0; (Feature).length > i; i++) {
+            outputFeatures[(Feature)[i]] = false;
+        }
+        return encodeURIComponent(JSON.stringify(outputFeatures));
+    }
+
+    async createFfmpeg(whoseSpace, Spacem3u8, output, checktime, waitms) {
+        let checkStart = false;
+        try {
+            console.log(output);
+            for (let checkspawn = 0, checkclose = 0, i = 0; i < checktime; i++) {
+                const ffmpeg = child_process.exec(`ffmpeg.exe -i ${Spacem3u8} -y -vn -c:a copy ${output} `, { cwd: `${this.rootFolder}\\..\\..` }, (error) => {
+                    if (error) {
+                        //console.error(error);
+                    }
+                });
+
+                ffmpeg.on('spawn', () => { checkspawn++; });
+                ffmpeg.on('close', (code) => {
+                    if (code === 1 && code !== 0) {
+                        console.log(`Success get m3u8 but it still empty. Retry...(${i + 1}/${checktime})`);
+                        checkclose++;
+                    }
+                });
+                await this.wait(waitms);
+                if (checkspawn !== checkclose) {
+                    checkStart = true;
+                    break;
+                }
+            }
         } catch (err) {
             throw new Error(err);
         }
-    }
-    if (outdataOrNot) {
-        try {
-            guestToken = await axios("https://api.twitter.com/1.1/guest/activate.json", {
-                "headers": {
-                    "authorization": "Bearer AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA"
-                },
-                "method": "POST"
-            })
-                .then((response) => { return response.data.guest_token; })
-                .catch((err) => { console.log('get x-guestToken fail.'); return Promise.reject(new Error(err)); });
-
-            fs.writeFileSync(`${rootFloder}\\data_json\\Token.json`, JSON.stringify({ "guestToken": guestToken }));
-
-            return guestToken;
-        } catch (err) {
-            throw new Error(err);
+        if (checkStart) {
+            console.log(`${whoseSpace}'s space start recording.`);
+            return 0;
+        } else {
+            throw new Error("Download fail.");
         }
     }
-    else { return guestToken.guestToken; }
-}
 
-function getKeyByValue(object, value) {
-    return Object.keys(object).find(key => object[key] === value);
-}
-//https://stackoverflow.com/questions/9907419/how-to-get-a-key-in-a-javascript-object-by-its-value
-
-function featuresStringBuilder(Feature) {
-    let outputFeatures = {};
-    for (let i = 0; (Feature).length > i; i++) {
-        outputFeatures[(Feature)[i]] = false;
+    async wait(ms) {
+        return new Promise(resolve => setTimeout(() => resolve(), ms));
     }
-    return encodeURIComponent(JSON.stringify(outputFeatures));
-}
 
-async function TwitterSpace(whoseSpace, cookie, configObj) {
-    try {
-        //初始化開始
-        let userData;
-        let userId = "";
-        let currentDateTime = GetTime();
-        let guestToken = "";
-        let record = "";
-        let outputPath = ""
-        let searchByName = "";
-        let saveIds = "";
-        let idListData = {};
+    async getUserIdByName(whoseSpace) {
+        if (!this.UserByScreenNameQraphl.queryId) await this.updateQueryIds();
 
-        if (!configObj) {
-            configObj = {
-                "record": true,
-                "outputPath": `${rootFloder}\\..\\..`,
-                "searchByName": true,
-                "saveIds": false
-            };
-
-            guestToken = await GetGuestToken()
-                .then((response) => { console.log(`Get guestToken: [ ${response} ]`); return response; })
-                .catch((err) => { console.log('get guestToken fail.'); return Promise.reject(new Error(err)); });
-
-        }
-        else {
-            if (typeof (configObj) !== "object") {
-                throw new Error("Input type or format error.");
-            }
-        }
-
-        if (typeof whoseSpace !== "string" && typeof whoseSpace !== "number") {
-            console.log("whoseSpace type error");
-            throw new Error("whoseSpace only accept string or nimber");
-        }
-
-        switch (configObj.record) {
-            case undefined:
-                record = true;
-                break;
-
-            case "true":
-                record = true;
-                break;
-
-            case true:
-                record = true;
-                break;
-
-            case "false":
-                record = false;
-                break;
-
-            case false:
-                record = false;
-                break;
-
-            default:
-                throw new Error("record only accept boolean or string");
-        }
-
-        if (!configObj.outputPath) { outputPath = path.resolve("./"); }
-        else { outputPath = configObj.outputPath; }
-        if (typeof outputPath !== "string") { throw new Error("outputPath type error"); };
-
-        switch (configObj.searchByName) {
-            case undefined:
-                searchByName = true;
-                break;
-
-            case "true":
-                searchByName = true;
-                break;
-
-            case true:
-                searchByName = true;
-                break;
-
-            case "false":
-                searchByName = false;
-                break;
-
-            case false:
-                searchByName = false;
-                break;
-
-            default:
-                throw new Error("searchByName only accept boolean or string");
-        }
-
-        switch (configObj.saveIds) {
-            case undefined:
-                saveIds = false;
-                break;
-
-            case "true":
-                saveIds = true;
-                break;
-
-            case true:
-                saveIds = true;
-                break;
-
-            case "false":
-                saveIds = false;
-                break;
-
-            case false:
-                saveIds = false;
-                break;
-
-            default:
-                throw new Error("saveIds only accept boolean or string");
-        }
-
-        if (!configObj.guestToken) {
-            guestToken = await GetGuestToken(false)
-                .then((response) => { console.log(`Get guestToken: [ ${response} ]`); return response; })
-                .catch((err) => { console.log('get guestToken fail.'); return Promise.reject(new Error(err)); });
-
-        }
-        else { if (typeof guestToken !== "string") { throw new Error("guestToken type error"); }; }
-
-
-        await GetQueryId(['UserByScreenName', 'UserByRestId', 'AudioSpaceById'], true, false)
-            .then((response) => {
-                UserByScreenNameQraphl = response[0];
-                UserByRestIdQraphl = response[1];
-                AudioSpaceByIdQraphl = response[2];
-
-                console.log(`Get UserByScreenNameQraphl: [ ${UserByScreenNameQraphl.queryId} ]`);
-                console.log(`Get UserByRestIdQraphl: [ ${UserByRestIdQraphl.queryId} ]`);
-                console.log(`Get AudioSpaceByIdQraphl: [ ${AudioSpaceByIdQraphl.queryId} ]`);
-                
-            })
-            .catch((err) => {
-                console.log('Get Qraphl List fail.');
-                return Promise.reject(new Error(err))
-            });
-
-        if (saveIds) {
-            try { idListData = JSON.parse(fs.readFileSync(`${rootFloder}\\data_json\\ID_List.json`)); }
-            catch (err) {
-                console.log('Failed to load ID_List.json now clear old file and rebuild one.');
-                fs.writeFileSync(`ID_List.json`, JSON.stringify({}));
-            }
-            if (!searchByName) {
-
-                userId = whoseSpace;
-                whoseSpace = getKeyByValue(idListData, whoseSpace);
-            }
-
-            if (idListData[whoseSpace] && whoseSpace) {
-                userId = idListData[whoseSpace];
-                userData = {
-                    name: whoseSpace,
-                    id: userId
-                }
-                console.log(`Get userName: [ ${whoseSpace} ]`);
-                console.log(`Get userId: [ ${idListData[whoseSpace]} ]`);
-            }
-            else {
-                if (searchByName) {
-
-                    userId = await axios(`https://twitter.com/i/api/graphql/${UserByScreenNameQraphl.queryId}/UserByScreenName?variables=` + encodeURIComponent(JSON.stringify({
-                        "screen_name": `${whoseSpace}`,
-                        "withSafetyModeUserFields": true
-                    })) +
-                        "&features=" + featuresStringBuilder(UserByScreenNameQraphl.queryToken), {
-                        "headers": {
-                            "cookie": `auth_token=${auth_data.auth}; ct0=${auth_data.ct0}`,
-                            "x-csrf-token": auth_data.xcsrf,
-                            "authorization": "Bearer AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA"
-                        },
-                        "method": "GET"
-                    })
-                        .then((response) => { console.log(`Get userId: [ ${response.data.data.user.result.rest_id} ]`); return response.data.data.user.result.rest_id; })
-                        .catch((err) => { console.log('get userId from screenName fail.'); return Promise.reject(new Error(err)); })
-                }
-                else {
-                    whoseSpace = await axios(`https://twitter.com/i/api/graphql/${UserByRestIdQraphl.queryId}/UserByRestId?variables=` + encodeURIComponent(JSON.stringify({
-                        "userId": `${userId}`,
-                        "withSafetyModeUserFields": true,
-                        "withSuperFollowsUserFields": true
-                    })) +
-                        "&features=" + + featuresStringBuilder(UserByRestIdQraphl.queryToken), {
-                        "headers": {
-                            "cookie": `auth_token=${auth_data.auth}; ct0=${auth_data.ct0}`,
-                            "x-csrf-token": auth_data.xcsrf,
-
-                            "authorization": "Bearer AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA"
-                        },
-                        "method": "GET"
-                    })
-                        .then((response) => { console.log(`Get whoseSpace: [ ${response.data.data.user.result.legacy.screen_name} ]`); return response.data.data.user.result.legacy.screen_name; })
-                        .catch(async (err) => { console.log('get ScreenName from userId fail.'); return Promise.reject(new Error(err)); });
-                }
-                userData = {
-                    name: whoseSpace,
-                    id: userId
-                }
-
-                idListData[whoseSpace] = userId;
-                fs.writeFileSync(`ID_List.json`, JSON.stringify(idListData, null, '    '));
-
-            }
-
-        }
-        else {
-            if (searchByName) {
-                //Get UserId from screenname or Get screenname from id
-
-                userData = await axios(`https://twitter.com/i/api/graphql/${UserByScreenNameQraphl.queryId}/UserByScreenName?variables=` + encodeURIComponent(JSON.stringify({
-                    "screen_name": `${whoseSpace}`,
-                    "withSafetyModeUserFields": true
-                })) +
-                    "&features=" + featuresStringBuilder(UserByScreenNameQraphl.queryToken), {
-                    "headers": {
-                        "cookie": `auth_token=${auth_data.auth}; ct0=${auth_data.ct0}`,
-                        "x-csrf-token": auth_data.xcsrf,
-                        "authorization": "Bearer AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA"
-                    },
-                    "method": "GET"
-                })
-                    .then((response) => {
-                        console.log(`Get userId: [ ${response.data.data.user.result.rest_id} ]`);
-                        userId = response.data.data.user.result.rest_id;
-                        return response.data.data.user.result;
-                    })
-
-                    .catch((err) => { console.log('get userId from screenName fail.'); return Promise.reject(new Error(err)); })
-
-            }
-            else {
-                userId = whoseSpace;
-                userData = await axios(`https://twitter.com/i/api/graphql/${UserByRestIdQraphl.queryId}/UserByRestId?variables=` + encodeURIComponent(JSON.stringify({
-                    "userId": `${userId}`,
-                    "withSafetyModeUserFields": true,
-                    "withSuperFollowsUserFields": true
-                })) +
-                    "&features=" + featuresStringBuilder(UserByRestIdQraphl.queryToken), {
-                    "headers": {
-                        "cookie": `auth_token=${auth_data.auth}; ct0=${auth_data.ct0}`,
-                        "x-csrf-token": auth_data.xcsrf,
-
-                        "authorization": "Bearer AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA"
-                    },
-                    "method": "GET"
-                })
-                    .then((response) => { console.log(`Get whoseSpace: [ ${response.data.data.user.result.legacy.screen_name} ]`); return response.data.data.user.result; })
-                    .catch(async (err) => { console.log('get ScreenName from userId fail.'); return Promise.reject(new Error(err)); });
-
-
-                try { whoseSpace = userData.legacy.screen_name; } catch (err) { console.log(err); };
-
-            }
-        }
-        let spaceId = await axios("https://twitter.com/i/api/fleets/v1/avatar_content?user_ids=" + userId + "&only_spaces=true", {
-            "headers": {
-                "cookie": `auth_token=${auth_data.auth}; ct0=${auth_data.ct0}`,
-                "x-csrf-token": auth_data.xcsrf,
-                "authorization": "Bearer AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA"
+        let res = this.twitterSpaceAxios(`https://twitter.com/i/api/graphql/${this.UserByScreenNameQraphl.queryId}/UserByScreenName?variables=` + encodeURIComponent(JSON.stringify({
+            "screen_name": `${whoseSpace}`
+        })) +
+            "&features=" + this.featuresStringBuilder(this.UserByScreenNameQraphl.queryToken), {
+            headers: {
+                "cookie": `auth_token=${this.cookie.auth}; ct0=${this.cookie.ct0}`,
+                "x-csrf-token": this.cookie.ct0,
             },
-            "method": "GET"
+            method: "GET"
+        })
+            .then(response => response.data.data.user.result.rest_id)
+            .catch(err => { throw new Error('get userId from screenName fail.', err); });
+
+            return res;
+    }
+
+    async getUserNameById(userId) {
+        if (!this.UserByRestIdQraphl.queryId) await this.updateQueryIds();
+
+        return this.twitterSpaceAxios(`https://twitter.com/i/api/graphql/${this.UserByRestIdQraphl.queryId}/UserByRestId?variables=` + encodeURIComponent(JSON.stringify({
+            "userId": `${userId}`
+        })) +
+            "&features=" + this.featuresStringBuilder(this.UserByRestIdQraphl.queryToken), {
+            headers: {
+                "cookie": `auth_token=${this.cookie.auth}; ct0=${this.cookie.ct0}`,
+                "x-csrf-token": this.cookie.ct0,
+            },
+            method: "GET"
+        })
+            .then(response => response.data.data.user.result.legacy.screen_name)
+            .catch(err => { throw new Error('get ScreenName from userId fail.', err); });
+    }
+
+    async getSpaceId(userId) {
+        let retryCount = 0;
+        let spaceId = null;
+
+        while (retryCount < 10) {
+            try {
+                const response = await this.twitterSpaceAxios("https://twitter.com/i/api/fleets/v1/avatar_content?user_ids=" + userId + "&only_spaces=true", {
+                    headers: {
+                        "cookie": `auth_token=${this.cookie.auth}; ct0=${this.cookie.ct0}`,
+                        "x-csrf-token": this.cookie.ct0,
+                    },
+                    method: "GET"
+                });
+
+                if (this.ToStrKillQuote(response?.data?.users) === "{}") {
+                    throw new Error("Twitter space is not open.");
+                }
+
+                spaceId = this.ToStrKillQuote(response?.data?.users[`${userId}`]?.spaces?.live_content?.audiospace?.broadcast_id);
+                break;
+            } catch (error) {
+                retryCount++;
+                await this.wait(10000);
+            }
         }
 
-        )
-            .then((response) => { return response; })
-            .catch((err) => { console.log('get spaceId fail. Make sure your cookie is correct.'); return Promise.reject(new Error(err)); });
+        return spaceId;
+    }
 
-        if (ToStrKillQuote(spaceId.data.users) === "{}") { console.log("Twitter space is not open."); return 2; }
-        else {
-            try { spaceId = ToStrKillQuote(spaceId.data.users[`${userId}`].spaces.live_content.audiospace.broadcast_id); }
-            catch (err) { throw new Error(err); }
-            console.log(`Get spaceId: [ ${spaceId} ]`);
-        }
+    ToStrKillQuote(jsonData) {
+        return JSON.stringify(jsonData).replace(/\"/g, "");
+    }
 
-        let spaceData = await axios(
-            `https://twitter.com/i/api/graphql/${AudioSpaceByIdQraphl.queryId}/AudioSpaceById?variables=` + encodeURIComponent(JSON.stringify({
+    async getSpaceData(spaceId) {
+        if (!this.AudioSpaceByIdQraphl.queryId) await this.updateQueryIds();
+
+        const response = await this.twitterSpaceAxios(
+            `https://twitter.com/i/api/graphql/${this.AudioSpaceByIdQraphl.queryId}/AudioSpaceById?variables=` + encodeURIComponent(JSON.stringify({
                 "id": spaceId,
                 "isMetatagsQuery": false,
-                "withSuperFollowsUserFields": true,
-                "withDownvotePerspective": false,
-                "withReactionsMetadata": false,
-                "withReactionsPerspective": false,
-                "withSuperFollowsTweetFields": true,
                 "withReplays": true,
-            })) + "&features=" + featuresStringBuilder(AudioSpaceByIdQraphl.queryToken), {
-            "headers": {
-                "cookie": `auth_token=${auth_data.auth}; ct0=${auth_data.ct0}`,
-                "x-csrf-token": auth_data.xcsrf,
-
-                "authorization": "Bearer AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA"
+                "withListeners": true
+            })) + "&features=" + this.featuresStringBuilder(this.AudioSpaceByIdQraphl.queryToken), {
+            headers: {
+                "cookie": `auth_token=${this.cookie.auth}; ct0=${this.cookie.ct0};`,
+                "x-csrf-token": this.cookie.ct0,
             },
-            "method": "GET"
-        })
-            .then((response) => { return response.data.data.audioSpace; })
-            .catch((err) => { `Get spaceId spaceData fail`; return Promise.reject(new Error(err)); });
-
-        let broadcastId = ToStrKillQuote(spaceData.metadata.media_key);
-        let broadcastTitle = ToStrKillQuote(spaceData.metadata.title);
-
-        console.log(`Get broadcastId: [ ${broadcastId} ]`);
-
-        let Spacem3u8 = await axios(
-            "https://twitter.com/i/api/1.1/live_video_stream/status/" + broadcastId + "?client=web&use_syndication_guest_id=false&cookie_set_host=twitter.com", {
-            "headers": {
-                "cookie": `auth_token=${auth_data.auth}; ct0=${auth_data.ct0}`,
-                "x-csrf-token": auth_data.xcsrf,
-
-                "authorization": "Bearer AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA"
-            },
-            "method": "GET"
-        })
-            .then((response) => { console.log(`Get m3u8 finish`); return ToStrKillQuote(response.data.source.location); })
-            .catch((err) => { console.log(`Get m3u8 error`); return Promise.reject(new Error(err)); });
-
-
-        let outputBroadcastTitle = broadcastTitle.replace(/[<>:;,?"*|/\\]/g, "").replace(/\s/g, "_");
-        let output = `${outputPath}\\${whoseSpace}_${GetTime(spaceData.metadata.started_at)}_${outputBroadcastTitle}.m4a`;
-
-
-        if (record) {
-            await createFfmpeg(whoseSpace, Spacem3u8, output, 15, 1000)
-            return {
-                "title": broadcastTitle,
-                "m3u8": Spacem3u8,
-                "name": whoseSpace,
-                "id": userId,
-                "spaceId": spaceId,
-                "broadcastId": broadcastId,
-                "spaceData": spaceData,
-                "userData": userData
-            };
-        }
-        else {
-            return {
-                "title": broadcastTitle,
-                "m3u8": Spacem3u8,
-                "name": whoseSpace,
-                "id": userId,
-                "spaceId": spaceId,
-                "broadcastId": broadcastId,
-                "spaceData": spaceData,
-                "userData": userData
-            };
-        }
-
-    }
-    catch (err) {
-        console.log(err);
-        return -1;
-    }
-
-
-}
-
-TwitterSpace.getM3u8_FromBroadcastId = async (broadcastId) => {
-    if (typeof (broadcastId) !== "string") {
-        throw new Error("Input type or format error.");
-    }
-    let Spacem3u8 = await axios("https://twitter.com/i/api/1.1/live_video_stream/status/" + broadcastId + "?client=web&use_syndication_guest_id=false&cookie_set_host=twitter.com", {
-        "headers": {
-            "x-guest-token": GetGuestToken(),
-            "authorization": "Bearer AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA"
-        },
-        "method": "GET"
-    })
-        .then((response) => { console.log(`Get m3u8 finish`); return ToStrKillQuote(response.data.source.location); })
-        .catch((err) => { console.log(`Get m3u8 error`); return Promise.reject(new Error(err)); });
-
-    return Spacem3u8;
-}
-TwitterSpace.getSpaceData_FromSpaceId = async (spaceId) => {
-    await GetQueryId(['UserByScreenName', 'UserByRestId', 'AudioSpaceById'], true, false)
-        .then((response) => {
-            UserByScreenNameQraphl = response[0];
-            UserByRestIdQraphl = response[1];
-            AudioSpaceByIdQraphl = response[2];
-
-            console.log(`Get UserByScreenNameQraphl: [ ${UserByScreenNameQraphl.queryId} ]`);
-            console.log(`Get UserByRestIdQraphl: [ ${UserByRestIdQraphl.queryId} ]`);
-            console.log(`Get AudioSpaceByIdQraphl: [ ${AudioSpaceByIdQraphl.queryId} ]`);
-        })
-        .catch((err) => {
-            console.log('Get Qraphl List fail.');
-            return Promise.reject(new Error(err))
+            method: "GET"
         });
 
+        return response.data.data.audioSpace;
+    }
+
+    async getM3u8(broadcastId) {
+        const response = await this.twitterSpaceAxios("https://twitter.com/i/api/1.1/live_video_stream/status/" + broadcastId + "?client=web&use_syndication_guest_id=false&cookie_set_host=twitter.com", {
+            headers: {
+                "x-guest-token": await this.getGuestToken(),
+            },
+            method: "GET"
+        });
+
+        return this.ToStrKillQuote(response.data.source.location);
+    }
+
+    async execute(whoseSpace) {
+        try {
+            await this.updateQueryIds();
+
+            let userId = "";
+
+            if (this.configObj.searchByName) {
+                userId = await this.getUserIdByName(whoseSpace);
+            } else {
+                userId = whoseSpace;
+                whoseSpace = await this.getUserNameById(userId);
+            }
+
+            const spaceId = await this.getSpaceId(userId);
+            const spaceData = await this.getSpaceData(spaceId);
+            const broadcastId = this.ToStrKillQuote(spaceData.metadata.media_key);
+            const broadcastTitle = this.ToStrKillQuote(spaceData.metadata.title);
+
+            let Spacem3u8 = await this.getM3u8(broadcastId);
+
+            let outputBroadcastTitle = broadcastTitle.replace(/[<>:;,?"*|/\\]/g, "").replace(/\s/g, "_");
+            let output = `${this.configObj.outputPath}\\${whoseSpace}_${this.GetTime(spaceData.metadata.started_at)}_${outputBroadcastTitle}.m4a`;
+
+            if (this.configObj.record) {
+                await this.createFfmpeg(whoseSpace, Spacem3u8, output, 15, 1000);
+            }
+
+            return {
+                title: broadcastTitle,
+                m3u8: Spacem3u8,
+                name: whoseSpace,
+                id: userId,
+                spaceId: spaceId,
+                broadcastId: broadcastId,
+                spaceData: spaceData,
+                userData: await this.getUserData(userId)
+            };
+
+        } catch (err) {
+            if (err.message === "Twitter space is not open.") {
+                return 2;
+            }
+            else {
+                console.error(err);
+                return -1;
+            }
+        }
+    }
+
+    async getUserData(userId) {
+        if(!this.UserByRestIdQraphl.queryId) await this.updateQueryIds();
+
+        return await this.twitterSpaceAxios(`https://twitter.com/i/api/graphql/${this.UserByRestIdQraphl.queryId}/UserByRestId?variables=` + encodeURIComponent(JSON.stringify({
+            "userId": `${userId}`,
+            "withSafetyModeUserFields": true,
+            "withSuperFollowsUserFields": true
+        })) +
+            "&features=" + this.featuresStringBuilder(this.UserByRestIdQraphl.queryToken), {
+            headers: {
+                "cookie": `auth_token=${this.cookie.auth}; ct0=${this.cookie.ct0}`,
+                "x-csrf-token": this.cookie.ct0,
+            },
+            method: "GET"
+        })
+            .then(response => response.data.data.user.result)
+            .catch(err => { throw new Error('get userId from screenName fail.'); });
+    }
 
 
-    
+    GetTime(unixtime) {
+        let today = unixtime ? new Date(unixtime) : new Date();
+        let month = today.getMonth() + 1 < 10 ? '0' + (today.getMonth() + 1) : today.getMonth() + 1;
 
-    let spaceData = await axios(
-        `https://twitter.com/i/api/graphql/${AudioSpaceByIdQraphl.queryId}/AudioSpaceById?variables=` + encodeURIComponent(JSON.stringify({
-            "id": spaceId,
-            "isMetatagsQuery": false,
-            "withSuperFollowsUserFields": true,
-            "withDownvotePerspective": false,
-            "withReactionsMetadata": false,
-            "withReactionsPerspective": false,
-            "withSuperFollowsTweetFields": true,
-            "withReplays": true,
-        })) + "&features=" + featuresStringBuilder(AudioSpaceByIdQraphl.queryToken), {
-        "headers": {
-            "x-guest-token": GetGuestToken(),
-            "authorization": "Bearer AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA"
-        },
-        "method": "GET"
-    })
-        .then((response) => { return response.data.data.audioSpace; })
-        .catch((err) => { `Get spaceId spaceData fail`; return Promise.reject(new Error(err)); });
+        const AddZero = time => time < 10 ? '0' + time : time;
 
-    let broadcastId = ToStrKillQuote(spaceData.metadata.media_key);
-    let broadcastTitle = ToStrKillQuote(spaceData.metadata.title);
-
-    console.log(`Get broadcastId: [ ${broadcastId} ]`);
-
-    let Spacem3u8 = await axios("https://twitter.com/i/api/1.1/live_video_stream/status/" + broadcastId + "?client=web&use_syndication_guest_id=false&cookie_set_host=twitter.com", {
-        "headers": {
-            "x-guest-token": GetGuestToken(),
-            "authorization": "Bearer AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA"
-        },
-        "method": "GET"
-    })
-        .then((response) => { console.log(`Get m3u8 finish`); return ToStrKillQuote(response.data.source.location); })
-        .catch((err) => { console.log(`Get m3u8 error`); return Promise.reject(new Error(err)); });
-
-    return {
-        "title": broadcastTitle,
-        "m3u8": Spacem3u8,
-        "spaceId": spaceId,
-        "broadcastId": broadcastId,
-        "spaceData": spaceData
-    };
+        return `${today.getFullYear()}${month}${AddZero(today.getDate())}_${AddZero(today.getHours())}_${AddZero(today.getMinutes())}`;
+    }
 }
-TwitterSpace.getM3u8_FromSpaceId = async (spaceId) => {
-    return (await TwitterSpace.getSpaceData_FromSpaceId(spaceId)).m3u8;
-}
-TwitterSpace.getTitle = async (whoseSpace, auth_data) => { return TwitterSpace(whoseSpace, auth_data, { "record": false }).then((res) => { return res.title; }) };
-TwitterSpace.getM3u8 = async (whoseSpace, auth_data) => { return TwitterSpace(whoseSpace, auth_data, { "record": false }).then((res) => { return res.m3u8; }) };
-TwitterSpace.getName = async (whoseSpace, auth_data) => { return TwitterSpace(whoseSpace, auth_data, { "record": false }).then((res) => { return res.name; }) };
-TwitterSpace.getId = async (whoseSpace, auth_data) => { return TwitterSpace(whoseSpace, auth_data, { "record": false }).then((res) => { return res.id; }) };
-TwitterSpace.getSpaceId = async (whoseSpace, auth_data) => { return TwitterSpace(whoseSpace, auth_data, { "record": false }).then((res) => { return res.spaceId; }) };
-TwitterSpace.getBroadcastId = async (whoseSpace, auth_data) => { return TwitterSpace(whoseSpace, auth_data, { "record": false }).then((res) => { return res.broadcastId; }) };
-TwitterSpace.getSpaceData = async (whoseSpace, auth_data) => { return TwitterSpace(whoseSpace, auth_data, { "record": false }).then((res) => { return res.spaceData; }) };
-TwitterSpace.getUserData = async (whoseSpace, auth_data) => { return TwitterSpace(whoseSpace, auth_data, { "record": false }).then((res) => { return res.userData; }) };
 
 export default TwitterSpace;

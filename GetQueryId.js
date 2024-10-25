@@ -1,149 +1,168 @@
-import axios from "axios";
-import fs from "fs";
-import * as path from 'path'
-import { fileURLToPath } from 'url';
+import axios from 'axios';
+import crypto from 'crypto';
 
-const rootFloder = `${path.dirname(fileURLToPath(import.meta.url))}`;
+class GetQueryId {
+    constructor(botConfig) {
+        this.botConfig = botConfig;
 
-async function GetQueryId(QraphlName, noCheck, forcedUpdate) {
-
-    try {
-        noCheck = noCheck || false;
-        forcedUpdate = forcedUpdate || false;
-        let apiId = "";
-        let QueryIdListData = {};
-        try { QueryIdListData = JSON.parse(fs.readFileSync(`${rootFloder}\\data_json\\QueryIdList.json`)); }
-        catch (err) {
-            try { 
-                console.log('Failed to load QueryIdList.json now clear old file and rebuild one.');
-                fs.writeFileSync(`${rootFloder}\\data_json\\QueryIdList.json`, JSON.stringify({}));
-                QueryIdListData = {};
+        this.graphQLClient = axios.create({
+            baseURL: 'https://twitter.com',
+            withCredentials: true,
+            headers: {
+                'Authorization': 'Bearer AAAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs=1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA',
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36',
+                'Content-Type': 'application/json',
+                'X-Csrf-Token': this.botConfig.TwitterCSRFToken,
+                'cookie': `auth_token=${this.botConfig.TwitterAuthToken}; ct0=${this.botConfig.TwitterCSRFToken}; guest_id=v1%3A${crypto.createHash('md5').update(new Date().toISOString()).digest('hex')}`
             }
-             catch (err) {
-                 fs.mkdirSync(`${rootFloder}\\data_json`, { recursive: true });
-                 fs.writeFileSync(`${rootFloder}\\data_json\\QueryIdList.json`, JSON.stringify({}));
-                 QueryIdListData = {};
-             }
-        }
+        });
 
-        if (!noCheck || !Object.keys(QueryIdListData).length || forcedUpdate) {
-            //Get apiId for request Url
-            apiId = await axios("https://twitter.com/", {
-                "headers": {
-                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.93 Safari/537.36",
-                    "cookie": "guest_id=v1%3A168411793373102941"
-                },
-                "method": "GET"
-            })
-                .then((response) => {
-                    //console.log(response);
-                    return response.data.match(/(?<=\,api\:\").*?(?=\"\,\")/)[0];
-                })
-                .catch((err) => { console.log('get api Id fail.'); Promise.reject(new Error(err)); });
-            /*
-            mainJsId = await axios("https://twitter.com/", {
-                "headers": {
-                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.93 Safari/537.36"
-                },
-                "method": "GET"
-            })
-                .then((response) => { return response.data.match(/(?<=web-legacy\/main\.).*?(?=\.js)/)[0]; })
-                .catch((err) => { console.log('get apiId fail.'); Promise.reject(new Error(err)); });
-                //OLD WAY
-            */
-        }
-        //Check main.xxxxxxxx.js is newest or not. If is newest then skip download main.js and output.
-
-
-        if ((QueryIdListData.apiId != apiId && !noCheck) || !Object.keys(QueryIdListData).length || forcedUpdate) {
-
-            //Prase main.xxxxxxxx.js file to get queryId 
-            //let mainJsUrl = 'https://abs.twimg.com/responsive-web/client-web-legacy/main.' + apiId + '.js'; //OLD WAY
-            //console.log(apiId);
-            let mainJsUrl = 'https://abs.twimg.com/responsive-web/client-web-legacy/api.' + apiId + "a" + '.js';
-            QueryIdListData = await axios(mainJsUrl, {
-                "headers": {
-                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.93 Safari/537.36"
-                },
-                "method": "GET"
-            })
-                .then((response) => {
-                    //console.log(response);
-                    let rawList = response.data.match(/queryId\:\"([^"]+)\"\,operationName\:\"([^"]+)\"\,operationType\:\"query\"\,metadata\:\{featureSwitches\:\[([^\[\]]+)\](?=\,fieldToggles\:)/g);
-
-                    let operateName = [];
-                    let operateId = [];
-                    let queryRawList = [];
-                    let operateQuery = {};
-
-                    for (let i = 0, operate = ""; i < rawList.length; i++) {
-
-                        operate = rawList[i];
-
-                        operateId.push(operate.match(/(?<=queryId:").*?(?=")/)[0]);
-                        operateName.push(operate.match(/(?<=operationName:").*?(?=")/)[0]);
-                        if (operate.match(/(?<=featureSwitches:\[).*/)[0] !== "") {
-                            queryRawList = operate.match(/(?<=featureSwitches:\[).*/)[0].match(/(?<=\")([^",]+)(?=\")/g);
-                        }
-                        else {
-                            queryRawList = [""];
-                        }
-                        operateQuery[operateName[i]] = [];
-                        for (let j = 0; j < queryRawList.length; j++) {
-                            operateQuery[operateName[i]].push(queryRawList[j]);
-                        }
-
-                    }
-
-                    let outputJson = { "apiId": apiId, "queryInfo": {} };
-                    for (let i = 0; i < operateId.length; i++) {
-                        outputJson.queryInfo[operateName[i]] = {
-                            "queryId": operateId[i],
-                            "queryToken": operateQuery[operateName[i]]
-                        };
-                    }
-                    return outputJson;
-
-                })
-                .catch((err) => {
-                    console.log('get mainJsData fail.');
-                    return Promise.reject(new Error(err));
-                });
-
-
-            //update QueryIdList.json
-            fs.writeFileSync(`${rootFloder}\\data_json\\QueryIdList.json`, JSON.stringify(QueryIdListData, null, "    "));
-
-
-        }
-        if (Array.isArray(QraphlName)) {
-
-            const returnArray = new Array(QraphlName.length);
-
-            for (let i = 0, operate = ""; i < QraphlName.length; i++) {
-                operate = QraphlName[i];
-                returnArray[i] = QueryIdListData.queryInfo[`${operate}`];
+        // 添加響應攔截器來處理重定向
+        this.graphQLClient.interceptors.response.use(async (response) => {
+            if (response.status === 200 && response.data) {
+                const redirectUrl = this.extractRedirectUrl(response.data);
+                if (redirectUrl) {
+                    //console.log(`Redirecting to: ${redirectUrl}`);
+                    return await this.graphQLClient.get(redirectUrl);
+                }
             }
+            return response;
+        }, (error) => {
+            return Promise.reject(error);
+        });
 
-            return returnArray;
-
-        }
-        else if (typeof QraphlName === 'string') {
-
-            if (QraphlName === "all") {
-                return QueryIdListData;
-            }
-            else {
-                return QueryIdListData.queryInfo[`${QraphlName}`];
-            }
-        }
-        else {
-            throw new Error("Only accept Array or string.");
-        }
-    } catch (err) {
-        console.log(err);
-        return -1;
+        this.apiQueryData = {};
+        this.apiQueryData.apiId = {};
+        this.apiQueryData.queryInfo = {};
     }
+
+    extractRedirectUrl(html) {
+        const regex = /<meta http-equiv="refresh" content="0; url = (.*?)"/;
+        const match = html.match(regex);
+        return match ? match[1] : null;
+    }
+
+    async getQueryIdAndFeatureSwitches() {
+        const response = await this.graphQLClient.get('/', {
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+                'Referer': 'https://twitter.com/'
+            }
+        });
+
+        const webContext = response.data;
+
+        for (const item of ['main', 'modules.audio']) {
+            await this.addApiQueryData(webContext, item);
+        }
+
+        console.log('New Twitter API Query Data Found!');
+        console.log(`Total Query Data: ${Object.keys(this.apiQueryData).length}`);
+    }
+
+    async addApiQueryData(webContext, fileType) {
+        try {
+            let match;
+            let fileName;
+            if (fileType === 'main') {
+                match = webContext.match(/main\.([^"]+)\.js/);
+                if (!match) throw new Error(`Failed to get ${fileType} version`);
+                fileName = match[0];
+                this.apiQueryData.apiId['mainJsId'] = fileName;
+            } else {
+                match = webContext.match(new RegExp(`"${fileType.replace('.', '\\.')}"\\s*:\\s*"([^"]+)"`));
+                if (!match) throw new Error(`Failed to get ${fileType} version`);
+                fileName = `${fileType}.${match[1]}a.js`;
+                this.apiQueryData.apiId['audiomoduleId'] = fileName;
+            }
+
+            const type = webContext.includes('-legacy') ? 'client-web-legacy' : 'client-web';
+            const mainJsResponse = await axios.get(`https://abs.twimg.com/responsive-web/${type}/${fileName}`);
+            const mainJsText = mainJsResponse.data;
+
+            const apiQueryRegex = /{queryId:"([^"]+)",operationName:"([^"]+)",operationType:"([^"]+)",metadata:{featureSwitches:\[([^\]]+)]/g;
+            let queryMatch;
+            while ((queryMatch = apiQueryRegex.exec(mainJsText)) !== null) {
+                const queryId = queryMatch[1];
+                const featureSwitches = queryMatch[4].split(',').map(s => s.replace(/"/g, ''));
+                this.apiQueryData.queryInfo[queryMatch[2]] = { queryId, queryToken: featureSwitches};
+            }
+        } catch (error) {
+            console.error(`Error adding API query data for ${fileType}`, error);
+            throw error;
+        }
+    }
+
+    async getQueryId(queryName) {
+        if (!this.apiQueryData.queryInfo[queryName]) {
+            throw new Error(`Query ${queryName} not found`);
+        }
+
+        return this.apiQueryData.queryInfo[queryName].queryId;
+    }
+
+    async getQueryToken(queryName) {
+        if (!this.apiQueryData.queryInfo[queryName]) {
+            throw new Error(`Query ${queryName} not found`);
+        }
+
+        return this.apiQueryData.queryInfo[queryName].queryToken;
+    }
+
+    async getQueryIdAndToken(queryName) {
+        return {
+            queryId: await this.getQueryId(queryName),
+            queryToken: await this.getQueryToken(queryName)
+        };
+    }
+
+    async tryUpdate() {
+        const response = await this.graphQLClient.get('/', {
+        headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+            'Referer': 'https://twitter.com/'
+        }
+    });
+
+        
+        const webContext = response.data;
+
+        for (const item of ['main', 'modules.audio']) {
+            await this.checkAndTryUpdateData(webContext, item);
+        }
+    }
+
+    async checkAndTryUpdateData(webContext, fileType) {
+        try {
+            let match;
+            let fileName;
+            let outdated = false;
+            if (fileType === 'main') {
+                match = webContext.match(/main\.([^"]+)\.js/);
+                if (!match) throw new Error(`Failed to get ${fileType} version`);
+                fileName = match[0];
+                if(fileName !== this.apiQueryData.apiId['mainJsId']) outdated = true;
+                
+            } else {
+                match = webContext.match(new RegExp(`"${fileType.replace('.', '\\.')}"\\s*:\\s*"([^"]+)"`));
+                if (!match) throw new Error(`Failed to get ${fileType} version`);
+                fileName = `${fileType}.${match[1]}a.js`;
+                if(fileName !== this.apiQueryData.apiId['audiomoduleId']) outdated = true;
+            }
+
+            if(outdated) {
+                await this.addApiQueryData(webContext, fileType);
+            }
+
+        }
+        catch (error) {
+            console.error(`Error checking version for ${fileType}`, error);
+            throw error;
+        }
+    }
+
+
+
 
 }
 

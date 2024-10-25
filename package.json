@@ -10,5 +10,5 @@
   "main": "twitterspace_dl.js",
   "name": "twitterspace_dl",
   "type": "module",
-  "version": "1.0.1"
+  "version": "1.1.0"
 }
