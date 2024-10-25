@@ -1,231 +1,160 @@
-# twitterspace_dl.js module
 
-```
-This project import axios.
-And rely on ffmpeg to download space.
-Please put ffmpeg.exe and twitterspace_dl.js in the same folder or set ffmpeg.exe in enviroment.
-```
+# Twitter Space Downloader
 
-> **use way**
+This project is designed to download Twitter Spaces using the `twitterspace_dl.js` module, with `axios` for HTTP requests and `ffmpeg` for audio processing.
 
-```javascript
-TwitterSpace(whoseSpace, auth_data, configObj)
+## Requirements
 
-//default
-configObj = {
-  "record": true,
-  "outputPath": "./",
-  "searchByName": true,
-  "saveIds": false
-}
+- **Node.js** and **npm** (for JavaScript dependencies)
+- **ffmpeg**: Place `ffmpeg.exe` in the same folder as `twitterspace_dl.js` or add it to the system environment path.
 
-//auth_data format
-auth_data = {
-  "ct0": "xxxxxxxxxxxxxxxxxxx",
-  "xcsrf": "xxxxxxxxxxxxxxxxxxx",
-  "auth": "xxxxxxxxxxxxxxxxxxxxx"
-}
+## Installation
 
-```
-**Async function**
-
-1. whoseSpace accept string or number.  
-
-2. auth_data is an object that must contain Twitter's "auth_token", "ct0" 
-and "x-csrf-token" which you need to check your browser's dev-tool.
-
-3. record accept true/false/"true"/"false"  
-(When true it will start recording space.)  
-
-4. outputPath accept string  
-
-5. searchByName accept string or number  
-(When true it will get space data by username, or it will get space data by rest_id.)  
-
-6. saveIds accept true/false/"true"/"false"   
-(When true it will get space data by saving data, if it is not in data will save it to "./ID_List.json".)  
-**NOTICE : When saveIds true space data will only contain name and id**
-
-7. Return rule: 
-   - User's space open and sucess get m3u8 return object:
-   ```javascript
-   
-   returnObject = {
-    "title": broadcastTitle,
-    "m3u8": Spacem3u8,
-    "nameOrId": userName_or_userId,
-    "spaceId": spaceId,
-    "broadcastId": broadcastId,
-    "spaceData": spaceData,
-    "userData": userData
-   }
-   
+1. Install required Node.js dependencies:
+   ```bash
+   npm install axios
    ```
-   - User's space not open return 2
-   - Something go wrong return -1
 
-> **example**
-```javascript
-TwitterSpace("omarupolka", {
-  "ct0": "xxxxxxxxxxxxxxxxxxx",
-  "xcsrf": "xxxxxxxxxxxxxxxxxxx",
-  "auth": "xxxxxxxxxxxxxxxxxxxxx"
-})
-//Will start recording Polka's space and return fulldata object.
+2. Place `ffmpeg.exe` in the project directory or configure it in the system environment.
 
-TwitterSpace("omarupolka", {
-  "ct0": "xxxxxxxxxxxxxxxxxxx",
-  "xcsrf": "xxxxxxxxxxxxxxxxxxx",
-  "auth": "xxxxxxxxxxxxxxxxxxxxx"
-}, {"record": false})
-//Will only return fulldata object.
+## Usage
 
-//1270551806993547265 is omarupolka's rest_id
-TwitterSpace("1270551806993547265", {
-  "ct0": "xxxxxxxxxxxxxxxxxxx",
-  "xcsrf": "xxxxxxxxxxxxxxxxxxx",
-  "auth": "xxxxxxxxxxxxxxxxxxxxx"
-}, {"record": true, "outputPath": "./spacesave", "searchByName": false})
-//Will start recording Polka's space saving it to "./spacesave" and return fulldata object.
+The main function for downloading Twitter Spaces is `TwitterSpace(whoseSpace, auth_data, configObj)`.
 
-TwitterSpace("1270551806993547265", {
-  "ct0": "xxxxxxxxxxxxxxxxxxx",
-  "xcsrf": "xxxxxxxxxxxxxxxxxxx",
-  "auth": "xxxxxxxxxxxxxxxxxxxxx"
-}, {"record": true, "outputPath": "./spacesave", "searchByName": false, "saveIds": true})
-/*
-Will start recording Polka's space saving it to "./spacesave", create json file save ids, 
-and return object that the obj.spaceData only contain name and id.
+### Parameters
 
-obj.spaceData = {
-  name: userName,
-  id: userId
-}
-*/
-```
-8. Some alias  
-
-```javascript
-//For some special case, it can save time.
-TwitterSpace.getM3u8_FromBroadcastId(broadcastId);
-TwitterSpace.getM3u8_FromSpaceId(spaceId);
-TwitterSpace.getSpaceData_FromSpaceId(spaceId);
-
-//Follwing alias just call the main function it won't save any time.
-TwitterSpace.getTitle(whoseSpace, auth_data);
-TwitterSpace.getM3u8(whoseSpace, auth_data);
-TwitterSpace.getName(whoseSpace, auth_data);
-TwitterSpace.getId(whoseSpace, auth_data);
-TwitterSpace.getSpaceId(whoseSpace, auth_data);
-TwitterSpace.getBroadcastId(whoseSpace, auth_data);
-TwitterSpace.getSpaceData(whoseSpace, auth_data);
-TwitterSpace.getUserData(whoseSpace, auth_data);
-```
-## Small additional module: GetQueryId.js
-```
-This module import axios too.
-Can use without twitterspace_dl.js.
-```
-> **use way**
-
-```javascript
-GetQueryId("QraphlName", noCheck, forcedUpdate)
-```
-**Async function**
-QraphlName accept string and array.
-1. If input string will return object, input array will return object array with same sequence.
-2. It will save all Query data to ./QueryIdList.json.
-3. noCheck will skip version check.
-4. forcedUpdate will forced update Token.json.
-> **example**
-```javascript
-GetQueryId(["HomeTimeline", "BizProfileFetchUser", "UsersByRestIds"])
-//output: 
-    [
-        {
-            "queryId": "Sy5ZGGmqWbf8yu4gwsno1w",
-            "queryToken": [
-                "dont_mention_me_view_api_enabled",
-                "interactive_text_enabled",
-                "responsive_web_uc_gql_enabled",
-                "vibe_tweet_context_enabled",
-                "responsive_web_edit_tweet_api_enabled",
-                "standardized_nudges_misinfo",
-                "responsive_web_enhance_cards_enabled"
-            ]
-        },
-        {
-            "queryId": "o3OXj0LtB6MkqfR7o3_Fig",
-            "queryToken": [
-                ""
-            ]
-        },
-        {
-            "queryId": "f90_j1q82GqKXj5FbkrL1w",
-            "queryToken": [
-                ""
-            ]
-        }
-    ]
-GetQueryId("HomeTimeline")
-//output: {
-			"queryId": "Sy5ZGGmqWbf8yu4gwsno1w",
-			"queryToken": [
-				"dont_mention_me_view_api_enabled",
-				"interactive_text_enabled",
-				"responsive_web_uc_gql_enabled",
-				"vibe_tweet_context_enabled",
-				"responsive_web_edit_tweet_api_enabled",
-				"standardized_nudges_misinfo",
-				"responsive_web_enhance_cards_enabled"
-			]
-		}
-```
-## Realese EXE
-
-Just past the url without ?=20 or something like that, then start to download.  
-  
-source code:  
-```JS
-import TwitterSpace from 'twitterspace_dl';
-import child_process from "child_process";
-import * as readlinePromises from 'node:readline/promises';
-import path from 'path';
-import { fileURLToPath } from 'url';
-function wait(ms) {
-    return new Promise(resolve => setTimeout(() => resolve(), ms));
-};
-const mainFolder = path.dirname(fileURLToPath(import.meta.url));
-const openplace = process.cwd();
-
-console.log("資料存在：", mainFolder, " 要清除乾淨請至此資料夾刪除");
-let rl = readlinePromises.createInterface({
-  input: process.stdin,
-  output: process.stdout,
-  terminal: false
-});
-rl.on('line', line => {
-    console.log(`Received: ${line}`);
-    if (line === "close") {
-      rl.close();
-    } else {
-      rl.prompt();
+- `whoseSpace` - Twitter username or rest_id (string or number).
+- `auth_data` - Twitter authentication details in an object format:
+    ```javascript
+    auth_data = {
+      "ct0": "xxxxxxxxxxxxxxxxxxx",
+      "auth": "xxxxxxxxxxxxxxxxxxxxx"
     }
-  });
+    ```
+  - These values are available in the browser's Developer Tools under the "Cookies" section.
 
- 
-let URL = await rl.question('URL? \n');
-rl.pause();
-console.log("處理中，請稍候");
-let spaceId;
-try { spaceId = URL.match(/(?<=spaces\/).+/)[0];} catch {console.log("網址輸入錯誤"); await wait(5000).then(() => {process.exit();});}
-let spacedata = await TwitterSpace.getSpaceData_FromSpaceId(spaceId);
-console.log(spacedata)
-child_process.exec(`start cmd /K ffmpeg -i ${spacedata.m3u8} "${openplace}/${spacedata.title}.m4a"`, {
-    cwd: mainFolder
-  }, async (error, stdout, stderr) => {
-    if (stderr) console.log(stderr);
-  });
-  await rl.question('按任意鍵關閉');
-  rl.close;
+- `configObj` (optional) - Configuration object:
+    ```javascript
+    configObj = {
+      "record": true,          // Start recording if true
+      "outputPath": "./",       // Directory to save output files
+      "searchByName": true,     // Search by username (true) or by rest_id (false)
+      "saveIds": false          // Save downloaded Space IDs
+    }
+    ```
+
+### Return Values
+
+- On success, returns an object with details about the Twitter Space:
+    ```javascript
+    {
+      "title": broadcastTitle,
+      "m3u8": Spacem3u8,
+      "nameOrId": userName_or_userId,
+      "spaceId": spaceId,
+      "broadcastId": broadcastId,
+      "spaceData": spaceData,
+      "userData": userData
+    }
+    ```
+- If the Space is not live, it returns `2`.
+- On error, it returns `-1`.
+
+### Examples
+
+#### Example 1: Start recording Polka's Space
+
+```javascript
+const twitterSpace = new TwitterSpace(auth_data, configObj);
+twitterSpace.execute("omarupolka").then((result) => {
+  console.log(result);
+}).catch((error) => {
+  console.error("Error:", error);
+});
+```
+
+#### Example 2: Only return Space data without recording
+
+```javascript
+const twitterSpace = new TwitterSpace(auth_data, { record: false });
+twitterSpace.execute("omarupolka").then((result) => {
+  console.log(result);
+}).catch((error) => {
+  console.error("Error:", error);
+});
+```
+
+#### Example 3: Record Polka's Space using rest_id
+
+```javascript
+const twitterSpace = new TwitterSpace(auth_data, { record: true, outputPath: "./spacesave", searchByName: false });
+twitterSpace.execute("1270551806993547265").then((result) => {
+  console.log(result);
+}).catch((error) => {
+  console.error("Error:", error);
+});
+```
+
+#### Example 4: Save IDs of downloaded Spaces
+
+```javascript
+const twitterSpace = new TwitterSpace(auth_data, { record: true, outputPath: "./spacesave", searchByName: false, saveIds: true });
+twitterSpace.execute("1270551806993547265").then((result) => {
+  console.log(result);
+}).catch((error) => {
+  console.error("Error:", error);
+});
+```
+
+## Additional Aliases
+
+`TwitterSpace` offers shortcut functions for specific data retrieval:
+
+- `TwitterSpace.getM3u8_FromBroadcastId(broadcastId)`
+- `TwitterSpace.getM3u8_FromSpaceId(spaceId)`
+- `TwitterSpace.getSpaceData_FromSpaceId(spaceId)`
+
+## Additional Module: GetQueryId.js
+
+The `GetQueryId.js` module is used to retrieve GraphQL query IDs for Twitter's API.
+
+### Usage
+
+```javascript
+const getQueryId = new GetQueryId(botConfig);
+getQueryId.getQueryId("HomeTimeline").then((queryId) => {
+  console.log("HomeTimeline's queryId:", queryId);
+}).catch((error) => {
+  console.error("Failed to retrieve queryId:", error);
+});
+```
+
+### Parameters
+
+- `GraphQLName`: Name of the GraphQL query (string or array).
+- `noCheck`: Skip version check (boolean).
+- `forcedUpdate`: Force update of Token.json (boolean).
+
+### Examples
+
+Retrieve data for multiple GraphQL queries:
+
+```javascript
+const getQueryId = new GetQueryId(botConfig);
+getQueryId.getQueryId(["HomeTimeline", "BizProfileFetchUser", "UsersByRestIds"]).then((result) => {
+  console.log(result);
+}).catch((error) => {
+  console.error("Failed to retrieve queryId:", error);
+});
+```
+
+Retrieve data for a single query:
+
+```javascript
+const getQueryId = new GetQueryId(botConfig);
+getQueryId.getQueryId("HomeTimeline").then((queryId) => {
+  console.log("HomeTimeline's queryId:", queryId);
+}).catch((error) => {
+  console.error("Failed to retrieve queryId:", error);
+});
 ```
